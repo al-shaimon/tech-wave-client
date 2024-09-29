@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function Navbar() {
   return (
-    <div className="border-grey navbar border-b">
+    <div className="border-grey navbar my-2 border-b">
       <div className="navbar-start">
         <div className="dropdown">
           <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -65,7 +65,7 @@ export default function Navbar() {
       </div>
 
       <div className="navbar-end">
-        <a className="btn bg-primary text-white">Log In</a>
+        <a className="btn rounded-full bg-primary text-white">Log In</a>
       </div>
     </div>
   );
