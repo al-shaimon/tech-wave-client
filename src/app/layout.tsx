@@ -9,7 +9,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'Tech Wave',
+  title: 'TechWave',
   description: 'A social media platform for developers and tech enthusiasts',
 };
 
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark">
       <body className={poppins.className}>{children}</body>
     </html>
   );
