@@ -29,8 +29,8 @@ export default function NewsFeed() {
       images: [],
       videos: ["https://www.w3schools.com/html/mov_bbb.mp4"],
       timestamp: "4h ago",
-      votes: 2,
-      comments: 2,
+      votes: 3,
+      comments: 7,
     },
     {
       id: 3,
