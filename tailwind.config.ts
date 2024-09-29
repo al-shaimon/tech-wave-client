@@ -17,6 +17,7 @@ const config: Config = {
         foreground: "var(--foreground)",
         primary: "#ffb400",
         grey: "#8f8a8a",
+        greyBg: "#2a3236"
       },
     },
   },
