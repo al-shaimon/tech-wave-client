@@ -8,11 +8,11 @@ export default function NewsFeed() {
       user: {
         name: "John Doe",
         username: "@johndoe",
-        profilePic: "/pic.jpg",
+        profilePic: "/picture.jpg",
       },
       content:
         "This is a sample tweet-like post. Tailwind CSS makes styling so easy!",
-      images: ["/pic.jpg", "/pic.jpg"],
+      images: ["/picture.jpg", "/picture.jpg"],
       videos: [],
       timestamp: "2h ago",
       votes: 0,
@@ -23,7 +23,7 @@ export default function NewsFeed() {
       user: {
         name: "Joe Smith",
         username: "@joesmith",
-        profilePic: "/pic.jpg",
+        profilePic: "/picture.jpg",
       },
       content: "Another day, another line of code. Keep pushing forward!",
       images: [],
@@ -37,10 +37,10 @@ export default function NewsFeed() {
       user: {
         name: "Alice Johnson",
         username: "@alicejohnson",
-        profilePic: "/pic.jpg",
+        profilePic: "/picture.jpg",
       },
       content: "Learning React is fun!",
-      images: ["/pic.jpg"],
+      images: ["/picture.jpg"],
       videos: ["https://www.w3schools.com/html/mov_bbb.mp4"],
       timestamp: "1h ago",
       votes: -1,
@@ -49,7 +49,7 @@ export default function NewsFeed() {
   ];
 
   return (
-    <div className="border-grey my-2 border-t p-4">
+    <div className="my-2 border-t border-grey p-4">
       {/* Feed */}
       {postsData.map((post) => (
         <Post key={post.id} post={post} />

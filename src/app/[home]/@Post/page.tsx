@@ -33,7 +33,7 @@ export default function Post() {
         <div className="mr-4">
           <Image
             className="rounded-full"
-            src="/pic.jpg"
+            src="/picture.jpg"
             width={48}
             height={48}
             alt="Profile"
