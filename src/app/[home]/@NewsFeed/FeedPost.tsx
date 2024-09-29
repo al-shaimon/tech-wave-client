@@ -19,7 +19,7 @@ interface Post {
 
 export default function FeedPost({ post }: { post: Post }) {
   return (
-    <div className="mb-4 w-full rounded-lg bg-base-100 p-4 shadow-md">
+    <div className="mb-4 rounded-lg bg-base-100 py-4 shadow-md md:w-full md:p-4">
       <div className="flex items-start">
         {/* User Profile Picture */}
         <Image
@@ -29,7 +29,7 @@ export default function FeedPost({ post }: { post: Post }) {
           width={48}
           height={48}
         />
-        <div className="ml-4 w-full">
+        <div className="ml-2 w-full text-sm md:ml-4 md:text-base">
           {/* User Info */}
           <div className="flex justify-between">
             <div>
@@ -39,7 +39,7 @@ export default function FeedPost({ post }: { post: Post }) {
             <span className="text-gray-500">{post.timestamp}</span>
           </div>
           {/* Post Content */}
-          <p className="my-2 text-lg">{post.content}</p>
+          <p className="my-2 md:text-lg">{post.content}</p>
 
           {/* Media (Images and Videos) */}
           {post.images.length > 0 && (
@@ -54,7 +54,9 @@ export default function FeedPost({ post }: { post: Post }) {
                 <div
                   key={index}
                   className={`${
-                    post.images.length === 1 ? "relative w-full h-96" : "relative h-96"
+                    post.images.length === 1
+                      ? "relative h-64 w-full md:h-96"
+                      : "relative h-64 md:h-96"
                   }`}
                 >
                   <Image
@@ -72,7 +74,7 @@ export default function FeedPost({ post }: { post: Post }) {
           {post.videos.length > 0 && (
             <div className="mt-2">
               {post.videos.map((video, index) => (
-                <video key={index} controls className="rounded-md w-full">
+                <video key={index} controls className="w-full rounded-md">
                   <source src={video} type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
@@ -82,7 +84,10 @@ export default function FeedPost({ post }: { post: Post }) {
 
           {/* Voting and Commenting Actions */}
           <div className="mt-2 flex items-center text-gray-500">
-            <VoteButtons initialVotes={post.votes} commentsCount={post.comments} />
+            <VoteButtons
+              initialVotes={post.votes}
+              commentsCount={post.comments}
+            />
           </div>
         </div>
       </div>

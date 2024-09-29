@@ -6,7 +6,10 @@ interface VoteButtonsProps {
   commentsCount: number;
 }
 
-export default function VoteButtons({ initialVotes, commentsCount }: VoteButtonsProps) {
+export default function VoteButtons({
+  initialVotes,
+  commentsCount,
+}: VoteButtonsProps) {
   const [votes, setVotes] = useState(initialVotes);
   const [hasUpVoted, setHasUpVoted] = useState(false);
   const [hasDownVoted, setHasDownVoted] = useState(false);
@@ -48,10 +51,14 @@ export default function VoteButtons({ initialVotes, commentsCount }: VoteButtons
   };
 
   return (
-    <div className="mt-2 flex items-center text-white text-sm">
+    <div className="mt-2 flex items-center text-sm text-white">
       <div
-        className={`rounded-full px-3 py-1 flex items-center ${
-          hasUpVoted ? 'bg-red-500' : hasDownVoted ? 'bg-blue-500' : 'bg-greyBg'
+        className={`flex items-center rounded-full px-3 py-1 ${
+          hasUpVoted
+            ? "bg-orange-500"
+            : hasDownVoted
+              ? "bg-red-500"
+              : "bg-greyBg"
         }`}
       >
         {/* UpVote */}
@@ -59,10 +66,10 @@ export default function VoteButtons({ initialVotes, commentsCount }: VoteButtons
           onClick={handleUpVote}
           onMouseEnter={() => setHoverUpVote(true)}
           onMouseLeave={() => setHoverUpVote(false)}
-          className="cursor-pointer flex items-center"
+          className="flex cursor-pointer items-center"
         >
           <svg
-            fill={hoverUpVote ? 'red' : 'currentColor'}
+            fill={hoverUpVote ? "#ee6300" : "currentColor"}
             height="16"
             icon-name="upvote-outline"
             viewBox="0 0 20 20"
@@ -79,10 +86,10 @@ export default function VoteButtons({ initialVotes, commentsCount }: VoteButtons
           onClick={handleDownVote}
           onMouseEnter={() => setHoverDownVote(true)}
           onMouseLeave={() => setHoverDownVote(false)}
-          className="cursor-pointer flex items-center ml-4"
+          className="ml-4 flex cursor-pointer items-center"
         >
           <svg
-            fill={hoverDownVote ? '#3b82f6' : 'currentColor'}
+            fill={hoverDownVote ? "red" : "currentColor"}
             height="16"
             icon-name="downvote-outline"
             viewBox="0 0 20 20"
@@ -95,7 +102,7 @@ export default function VoteButtons({ initialVotes, commentsCount }: VoteButtons
       </div>
 
       {/* Comment Section with Icon */}
-      <div className="bg-greyBg px-3 py-1 rounded-full ml-4 cursor-pointer flex items-center">
+      <div className="ml-4 flex cursor-pointer items-center rounded-full bg-greyBg px-3 py-1">
         <svg
           aria-hidden="true"
           className="icon-comment"
@@ -112,7 +119,7 @@ export default function VoteButtons({ initialVotes, commentsCount }: VoteButtons
       </div>
 
       {/* Share Section with Icon */}
-      <div className="bg-greyBg px-3 py-1 rounded-full ml-4 cursor-pointer flex items-center">
+      <div className="ml-4 flex cursor-pointer items-center rounded-full bg-greyBg px-3 py-1">
         <svg
           aria-hidden="true"
           className="icon-share"

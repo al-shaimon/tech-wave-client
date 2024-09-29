@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function Navbar() {
   return (
-    <div className="border-grey navbar my-2 border-b">
+    <div className="navbar my-2 border-b border-grey">
       <div className="navbar-start">
         <div className="dropdown">
           <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -46,11 +46,11 @@ export default function Navbar() {
         </div>
 
         <div className="md:hidden">
-          <Image src="/l1.png" width={36} height={50} alt="TechWave" />
+          <Image src="/l1.png" width={26} height={26} alt="TechWave" />
         </div>
 
         <div className="hidden md:block">
-          <Image src="/l2.png" width={150} height={50} alt="TechWave" />
+          <Image src="/l3.png" width={150} height={50} alt="TechWave" />
         </div>
       </div>
       {/* Search Input Fields */}
