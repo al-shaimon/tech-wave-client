@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="dark">
       <body className={poppins.className}>
-        <div className="border-grey mx-auto max-w-screen-lg rounded-md border">
+        <div className="mx-auto max-w-screen-lg rounded-md border-grey md:border">
           {children}
         </div>
       </body>

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import VoteButtons from "./VoteButtons";
+import PostLightGallery from "./PostLightGallery"; // Import the new client component
 
 interface User {
   profilePic: string;
@@ -43,31 +44,8 @@ export default function FeedPost({ post }: { post: Post }) {
 
           {/* Media (Images and Videos) */}
           {post.images.length > 0 && (
-            <div
-              className={`mt-2 ${
-                post.images.length === 1
-                  ? "w-full"
-                  : "grid grid-cols-1 gap-2 sm:grid-cols-2"
-              }`}
-            >
-              {post.images.map((image, index) => (
-                <div
-                  key={index}
-                  className={`${
-                    post.images.length === 1
-                      ? "relative h-64 w-full md:h-96"
-                      : "relative h-64 md:h-96"
-                  }`}
-                >
-                  <Image
-                    src={image}
-                    alt={`Image ${index + 1}`}
-                    layout="fill"
-                    objectFit="cover"
-                    className="rounded-md"
-                  />
-                </div>
-              ))}
+            <div>
+              <PostLightGallery images={post.images} />
             </div>
           )}
 
