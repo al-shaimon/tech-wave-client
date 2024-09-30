@@ -1,4 +1,5 @@
 import Image from "next/image";
+import LoginSignupModal from "./LoginSignupModal"; // Import the modal
 
 export default function Navbar() {
   return (
@@ -53,6 +54,7 @@ export default function Navbar() {
           <Image src="/l3.png" width={150} height={50} alt="TechWave" />
         </div>
       </div>
+
       {/* Search Input Fields */}
       <div className="navbar-center">
         <div className="form-control w-40 md:w-[300px] lg:w-[560px]">
@@ -65,7 +67,8 @@ export default function Navbar() {
       </div>
 
       <div className="navbar-end">
-        <a className="btn rounded-full bg-primary text-white">Log In</a>
+        {/* Use the LoginSignupModal */}
+        <LoginSignupModal />
       </div>
     </div>
   );

@@ -12,3 +12,18 @@ body {
   color: var(--foreground);
   /* background: #000; */
 }
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-box {
+  animation: fade-in-up 0.3s ease-out;
+}
