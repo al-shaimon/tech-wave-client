@@ -72,6 +72,7 @@ export default function CreatePost() {
       return response.data.secure_url;
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error);
+      toast.error("Error uploading media. Please try again later.");
       return null;
     }
   };
@@ -129,20 +130,27 @@ export default function CreatePost() {
     if (!files) return;
 
     const fileArray = Array.from(files);
-    const updatedPreviewMedia = fileArray.map((file) => {
+    const updatedPreviewMedia: Array<{ type: "image" | "video"; url: string }> =
+      [];
+
+    fileArray.forEach((file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Please select images or videos smaller than 5 MB.");
+        return;
+      }
+
       const fileType = file.type.startsWith("image") ? "image" : "video";
       const url = URL.createObjectURL(file); // Create a local preview URL
-      return { type: fileType, url };
+
+      updatedPreviewMedia.push({ type: fileType, url });
     });
 
-    setPreviewMedia((prev) => [
+    // Update preview and local files state if valid
+    setPreviewMedia((prev) => [...prev, ...updatedPreviewMedia]);
+    setLocalFiles((prev) => [
       ...prev,
-      ...updatedPreviewMedia.map((media) => ({
-        type: media.type as "image" | "video",
-        url: media.url,
-      })),
-    ]); // Show preview
-    setLocalFiles((prev) => [...prev, ...fileArray]); // Save local files
+      ...fileArray.filter((file) => file.size <= 5 * 1024 * 1024), // Add files that are <= 5MB
+    ]);
   };
 
   // Quill editor modules and formats with lists
