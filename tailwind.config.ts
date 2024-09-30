@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import daisyui from "daisyui";
+import typography from "@tailwindcss/typography";
 
 const config: Config = {
   daisyui: {
@@ -17,10 +18,10 @@ const config: Config = {
         foreground: "var(--foreground)",
         primary: "#f97316",
         grey: "#8f8a8a",
-        greyBg: "#2a3236"
+        greyBg: "#2a3236",
       },
     },
   },
-  plugins: [daisyui],
+  plugins: [daisyui, typography],
 };
 export default config;

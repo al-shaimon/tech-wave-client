@@ -1,4 +1,4 @@
-import Post from "./FeedPost"; // Import Post component
+import Post from "./FeedPost";
 
 export default function NewsFeed() {
   // Dummy data for posts
@@ -10,11 +10,16 @@ export default function NewsFeed() {
         username: "@johndoe",
         profilePic: "/picture.jpg",
       },
-      content:
-        "This is a sample tweet-like post. Tailwind CSS makes styling so easy!",
-      images: ["/picture.jpg", "/picture.jpg"],
-      videos: [],
-      timestamp: "2h ago",
+      content: "<p>how are you</p>",
+      images: [
+        "https://res.cloudinary.com/dr4guscnl/image/upload/v1727726501/z07wulgmbukwm69ixhbx.jpg",
+        "https://res.cloudinary.com/dr4guscnl/image/upload/v1727726501/prtsecy0an4pe0of8gqa.jpg",
+        "https://res.cloudinary.com/dr4guscnl/image/upload/v1727726501/wezouvlkx0wox1x7bs4s.jpg",
+      ],
+      videos: [
+        "https://res.cloudinary.com/dr4guscnl/video/upload/v1727726502/w9fvyjjfzeh91bx6ipyc.mp4",
+      ],
+      timestamp: "2024-09-30T20:05:24.335Z",
       votes: 0,
       comments: 5,
     },

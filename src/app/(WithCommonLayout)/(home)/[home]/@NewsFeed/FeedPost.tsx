@@ -1,6 +1,9 @@
 import Image from "next/image";
+import { formatDistanceToNow } from "date-fns";
 import VoteButtons from "./VoteButtons";
-import PostLightGallery from "./PostLightGallery"; // Import the new client component
+import PostLightGallery from "./PostLightGallery";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw"; // To enable HTML rendering in Markdown
 
 interface User {
   profilePic: string;
@@ -19,6 +22,24 @@ interface Post {
 }
 
 export default function FeedPost({ post }: { post: Post }) {
+  // Parse the timestamp and handle potential invalid date issues
+  let timeAgo: string;
+
+  try {
+    const postDate = new Date(post.timestamp);
+
+    // Check if the date is valid
+    if (isNaN(postDate.getTime())) {
+      throw new Error("Invalid date");
+    }
+
+    // Calculate how long ago the post was made
+    timeAgo = formatDistanceToNow(postDate, { addSuffix: true });
+  } catch (error) {
+    console.error("Error parsing timestamp:", error);
+    timeAgo = "Invalid date";
+  }
+
   return (
     <div className="mb-4 rounded-lg bg-base-100 py-4 shadow-md md:w-full md:p-4">
       <div className="flex items-start">
@@ -37,10 +58,17 @@ export default function FeedPost({ post }: { post: Post }) {
               <span className="font-bold">{post.user.name}</span>{" "}
               <span className="text-gray-500">{post.user.username}</span>
             </div>
-            <span className="text-gray-500">{post.timestamp}</span>
+            {/* Show how long ago the post was made */}
+            <span className="text-gray-500">{timeAgo}</span>
           </div>
-          {/* Post Content */}
-          <p className="my-2 md:text-lg">{post.content}</p>
+
+          {/* Post Content with ReactMarkdown and rehypeRaw for HTML support */}
+          <ReactMarkdown
+            className="prose-sm md:prose-lg prose text-gray-100"
+            rehypePlugins={[rehypeRaw]} // Allow rendering raw HTML
+          >
+            {post.content}
+          </ReactMarkdown>
 
           {/* Media (Images and Videos) */}
           {post.images.length > 0 && (

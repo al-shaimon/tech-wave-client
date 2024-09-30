@@ -48,6 +48,15 @@ export default function LoginSignupModal() {
     setErrorMessage(""); // Clear error message
   };
 
+  const setTokenInCookies = async (token: string) => {
+    try {
+      await axios.post("/api/set-cookie", { token });
+    } catch (error) {
+      console.error("Failed to set token in cookies", error);
+      toast.error("Failed to set token in cookies");
+    }
+  };
+
   // Login form submit handler
   const onLoginSubmit: SubmitHandler<LoginFormInput> = async (data) => {
     setIsLoading(true);
@@ -59,8 +68,13 @@ export default function LoginSignupModal() {
       );
       console.log("Login success", response.data);
 
+      const token = response.data.token;
+
       // Store token in local storage
-      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("token", token);
+
+      // Store the token in cookies via the server-side API route
+      await setTokenInCookies(token);
 
       toast.success("Login successful!");
       closeModal();

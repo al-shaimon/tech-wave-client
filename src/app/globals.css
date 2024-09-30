@@ -27,3 +27,11 @@ body {
 .modal-box {
   animation: fade-in-up 0.3s ease-out;
 }
+
+.ql-container {
+  min-height: 150px;
+}
+
+.ql-editor {
+  font-size: 16px;
+}

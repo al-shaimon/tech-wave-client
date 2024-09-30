@@ -1,5 +1,6 @@
 import Image from "next/image";
 import LoginSignupModal from "./LoginSignupModal"; // Import the modal
+import Link from "next/link";
 
 export default function Navbar() {
   return (
@@ -51,7 +52,9 @@ export default function Navbar() {
         </div>
 
         <div className="hidden md:block">
-          <Image src="/l3.png" width={150} height={50} alt="TechWave" />
+          <Link href="/">
+            <Image src="/l3.png" width={150} height={50} alt="TechWave" />
+          </Link>
         </div>
       </div>
 

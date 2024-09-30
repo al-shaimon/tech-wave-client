@@ -10,10 +10,10 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   function (config) {
     const cookieStore = cookies();
-    const accessToken = cookieStore.get("accessToken")?.value;
+    const token = cookieStore.get("token")?.value;
 
-    if (accessToken) {
-      config.headers.Authorization = accessToken;
+    if (token) {
+      config.headers.Authorization = token;
     }
 
     return config;
