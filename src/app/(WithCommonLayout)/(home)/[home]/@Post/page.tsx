@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import Image from "next/image";
-import { useState, useRef, forwardRef } from "react";
+import { useState, useRef, forwardRef, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css";
 import { toast } from "sonner";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode"; // Import jwt-decode
 
 // Dynamically import ReactQuill to avoid SSR issues
 const ReactQuill = dynamic(
@@ -21,12 +22,11 @@ const ReactQuill = dynamic(
   { ssr: false },
 );
 
-// Mock user data
-const currentUser = {
-  name: "Alice Johnson",
-  username: "@alicejohnson",
-  profilePic: "/picture.jpg",
-};
+interface User {
+  name: string;
+  username: string;
+  profilePhoto: string;
+}
 
 interface PostData {
   content: string;
@@ -35,10 +35,10 @@ interface PostData {
 }
 
 export default function CreatePost() {
+  const [user, setUser] = useState<User | null>(null); // State for user info
   const [previewMedia, setPreviewMedia] = useState<
     Array<{ type: "image" | "video"; url: string }>
   >([]);
-
   const [isLoading, setIsLoading] = useState(false); // State for post button
   const [localFiles, setLocalFiles] = useState<File[]>([]); // Local files before upload
   const quillRef = useRef<any>(null);
@@ -50,6 +50,22 @@ export default function CreatePost() {
       videos: [],
     },
   });
+
+  useEffect(() => {
+    // Fetch and decode JWT token from localStorage
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decodedUser: User = jwtDecode(token); // Decode JWT token
+        setUser(decodedUser); // Set user state with decoded info
+      } catch (error) {
+        console.error("Invalid token:", error);
+        // toast.error("Failed to decode user information. Please log in again.");
+      }
+    } else {
+      // toast.error("User not found in localStorage.");
+    }
+  }, []);
 
   // Upload media to Cloudinary
   const uploadToCloudinary = async (file: File): Promise<string | null> => {
@@ -79,6 +95,11 @@ export default function CreatePost() {
 
   // Handle post submission
   const onSubmit = async (data: PostData) => {
+    if (!user) {
+      toast.error("User is not authenticated. Please login.");
+      return;
+    }
+
     try {
       toast.info("Posting...", { duration: 2000 });
 
@@ -99,7 +120,7 @@ export default function CreatePost() {
 
       // Create post object
       const newPost = {
-        user: currentUser,
+        user, // Use user info from the decoded token
         content: data.content,
         images: uploadedImages,
         videos: uploadedVideos,
@@ -172,19 +193,30 @@ export default function CreatePost() {
     "bullet",
   ];
 
+  // Render the component
+  if (!user) {
+    return (
+      <div className="my-4 p-4 text-center text-white">
+        <p>Please Log in to enlighten us.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="my-2 p-4 text-white">
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="flex items-start">
-          <div className="mr-4">
-            <Image
-              className="rounded-full"
-              src={currentUser.profilePic}
-              width={48}
-              height={48}
-              alt="Profile"
-            />
-          </div>
+          {user && (
+            <div className="mr-4">
+              <Image
+                className="rounded-full"
+                src={user.profilePhoto}
+                width={48}
+                height={48}
+                alt="Profile"
+              />
+            </div>
+          )}
           <div className="flex-1">
             <Controller
               name="content"
@@ -193,10 +225,10 @@ export default function CreatePost() {
                 <ReactQuill
                   {...field}
                   ref={quillRef}
-                  placeholder=""
+                  placeholder="Share your tech journey…"
                   modules={quillModules}
                   formats={quillFormats}
-                  className="mb-4 text-white"
+                  className="custom-quill mb-4 text-white"
                 />
               )}
             />

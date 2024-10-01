@@ -8,7 +8,7 @@ import axiosInstance from "@/lib/AxiosInstance";
 
 export const registerUser = async (userData: FieldValues) => {
   try {
-    const { data } = await axiosInstance.post("/auth/register", userData);
+    const { data } = await axiosInstance.post("/auth/signup", userData);
 
     if (data.success) {
       cookies().set("token", data?.data?.token);

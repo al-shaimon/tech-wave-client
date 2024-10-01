@@ -7,7 +7,6 @@ import axios from "axios";
 import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface LoginFormInput {
@@ -19,7 +18,6 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState(""); // Error message state
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const loginForm = useForm<LoginFormInput>();
-  const router = useRouter();
 
   const setTokenInCookies = async (token: string) => {
     try {
@@ -51,7 +49,7 @@ export default function LoginPage() {
 
       toast.success("Login successful!");
       // Redirect to home or desired page
-      router.push("/");
+      window.location.href = "/";
     } catch (error: any) {
       console.error("Login failed", error);
       setErrorMessage(

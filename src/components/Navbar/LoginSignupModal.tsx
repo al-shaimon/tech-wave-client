@@ -78,6 +78,7 @@ export default function LoginSignupModal() {
 
       toast.success("Login successful!");
       closeModal();
+      window.location.href = "/";
     } catch (error: any) {
       console.error("Login failed", error);
       setErrorMessage(

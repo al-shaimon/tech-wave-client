@@ -1,8 +1,18 @@
 import Image from "next/image";
 import LoginSignupModal from "./LoginSignupModal"; // Import the modal
 import Link from "next/link";
+import { jwtDecode, JwtPayload } from "jwt-decode";
+import { cookies } from "next/headers";
+import LogoutButton from "@/components/Navbar/LogoutButton";
+
+interface ExtendedJwtPayload extends JwtPayload {
+  profilePhoto?: string;
+}
 
 export default function Navbar() {
+  const token = cookies()?.get("token")?.value;
+  const user = token ? jwtDecode<ExtendedJwtPayload>(token) : null;
+
   return (
     <div className="navbar my-2 border-b border-grey">
       <div className="navbar-start">
@@ -70,8 +80,46 @@ export default function Navbar() {
       </div>
 
       <div className="navbar-end">
-        {/* Use the LoginSignupModal */}
-        <LoginSignupModal />
+        {user ? (
+          <div className="dropdown dropdown-end">
+            <div
+              tabIndex={0}
+              role="button"
+              className="avatar btn btn-circle btn-ghost"
+            >
+              <div className="w-10 rounded-full">
+                <Image
+                  src={user?.profilePhoto || "/picture.jpg"}
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                  alt="Profile"
+                />
+              </div>
+            </div>
+            <ul
+              tabIndex={0}
+              className="menu dropdown-content menu-sm z-[1] mt-3 w-52 rounded-box bg-base-100 p-2 shadow"
+            >
+              <li>
+                <Link href="/profile" className="justify-between">
+                  Profile
+                </Link>
+              </li>
+              <li>
+                <a>Settings</a>
+              </li>
+              <li>
+                {/* Use the LogoutButton component */}
+                <LogoutButton />
+              </li>
+            </ul>
+          </div>
+        ) : (
+          <div className="">
+            <LoginSignupModal />
+          </div>
+        )}
       </div>
     </div>
   );

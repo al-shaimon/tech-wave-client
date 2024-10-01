@@ -35,3 +35,8 @@ body {
 .ql-editor {
   font-size: 16px;
 }
+
+.custom-quill .ql-editor.ql-blank::before {
+  color: #8f8a8a;
+  opacity: 1;
+}
