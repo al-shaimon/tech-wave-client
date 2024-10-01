@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+
+// CreatePost.tsx
 import Image from "next/image";
 import { useState, useRef, forwardRef, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -7,9 +9,8 @@ import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css";
 import { toast } from "sonner";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // Import jwt-decode
+import { jwtDecode } from "jwt-decode";
 
-// Dynamically import ReactQuill to avoid SSR issues
 const ReactQuill = dynamic(
   () =>
     import("react-quill").then((mod) => {
@@ -35,12 +36,12 @@ interface PostData {
 }
 
 export default function CreatePost() {
-  const [user, setUser] = useState<User | null>(null); // State for user info
+  const [user, setUser] = useState<User | null>(null);
   const [previewMedia, setPreviewMedia] = useState<
     Array<{ type: "image" | "video"; url: string }>
   >([]);
-  const [isLoading, setIsLoading] = useState(false); // State for post button
-  const [localFiles, setLocalFiles] = useState<File[]>([]); // Local files before upload
+  const [isLoading, setIsLoading] = useState(false);
+  const [localFiles, setLocalFiles] = useState<File[]>([]);
   const quillRef = useRef<any>(null);
 
   const { control, handleSubmit, reset } = useForm<PostData>({
@@ -52,12 +53,11 @@ export default function CreatePost() {
   });
 
   useEffect(() => {
-    // Fetch and decode JWT token from localStorage
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        const decodedUser: User = jwtDecode(token); // Decode JWT token
-        setUser(decodedUser); // Set user state with decoded info
+        const decodedUser: User = jwtDecode(token);
+        setUser(decodedUser);
         console.log("User decoded:", decodedUser);
       } catch (error) {
         console.error("Invalid token:", error);
@@ -68,12 +68,11 @@ export default function CreatePost() {
     }
   }, []);
 
-  // Upload media to Cloudinary
   const uploadToCloudinary = async (file: File): Promise<string | null> => {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", "q5w9equz"); // Cloudinary preset
+      formData.append("upload_preset", "q5w9equz");
       formData.append(
         "cloud_name",
         process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "",
@@ -94,7 +93,6 @@ export default function CreatePost() {
     }
   };
 
-  // Handle post submission
   const onSubmit = async (data: PostData) => {
     if (!user) {
       toast.error("User is not authenticated. Please login.");
@@ -103,15 +101,12 @@ export default function CreatePost() {
 
     try {
       toast.info("Posting...", { duration: 2000 });
-
       setIsLoading(true);
 
-      // Upload media files only after the user clicks the post button
       const uploadedUrls = await Promise.all(
         localFiles.map((file) => uploadToCloudinary(file)),
       );
 
-      // Separate images and videos
       const uploadedImages = uploadedUrls.filter((url, index) =>
         localFiles[index]?.type.startsWith("image"),
       );
@@ -119,9 +114,8 @@ export default function CreatePost() {
         localFiles[index]?.type.startsWith("video"),
       );
 
-      // Create post object
       const newPost = {
-        user, // Use user info from the decoded token
+        user,
         content: data.content,
         images: uploadedImages,
         videos: uploadedVideos,
@@ -135,18 +129,16 @@ export default function CreatePost() {
       // Simulate API call
       // await axios.post("/api/posts", newPost);
 
-      // Reset the form and preview
       reset();
       setPreviewMedia([]);
       setLocalFiles([]);
-      setIsLoading(false); // Stop loading after post
+      setIsLoading(false);
     } catch (error) {
       console.error("Error creating post:", error);
-      setIsLoading(false); // Reset button loading state on error
+      setIsLoading(false);
     }
   };
 
-  // Handle file input for images and videos
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -162,20 +154,18 @@ export default function CreatePost() {
       }
 
       const fileType = file.type.startsWith("image") ? "image" : "video";
-      const url = URL.createObjectURL(file); // Create a local preview URL
+      const url = URL.createObjectURL(file);
 
       updatedPreviewMedia.push({ type: fileType, url });
     });
 
-    // Update preview and local files state if valid
     setPreviewMedia((prev) => [...prev, ...updatedPreviewMedia]);
     setLocalFiles((prev) => [
       ...prev,
-      ...fileArray.filter((file) => file.size <= 5 * 1024 * 1024), // Add files that are <= 5MB
+      ...fileArray.filter((file) => file.size <= 5 * 1024 * 1024),
     ]);
   };
 
-  // Quill editor modules and formats with lists
   const quillModules = {
     toolbar: [
       [{ header: [1, 2, false] }],
@@ -193,7 +183,18 @@ export default function CreatePost() {
     "bullet",
   ];
 
-  // Render the component
+  const focusQuill = () => {
+    if (quillRef.current) {
+      const editor = quillRef.current.getEditor();
+      editor.focus();
+    }
+  };
+
+  useEffect(() => {
+    // Focus the Quill editor when the component mounts
+    focusQuill();
+  }, []);
+
   if (!user) {
     return (
       <div className="my-4 p-4 text-center text-white">
@@ -218,22 +219,24 @@ export default function CreatePost() {
             </div>
           )}
           <div className="w-32 flex-1 md:w-96">
-            <Controller
-              name="content"
-              control={control}
-              render={({ field }) => (
-                <ReactQuill
-                  {...field}
-                  ref={quillRef}
-                  placeholder="Share your tech journey…"
-                  modules={quillModules}
-                  formats={quillFormats}
-                  className="custom-quill mb-4 text-white" // Add custom CSS class here
-                />
-              )}
-            />
+            <div className="quill-wrapper" onClick={focusQuill}>
+              <Controller
+                name="content"
+                control={control}
+                render={({ field }) => (
+                  <ReactQuill
+                    {...field}
+                    ref={quillRef}
+                    placeholder="Share your tech journey…"
+                    modules={quillModules}
+                    formats={quillFormats}
+                    className="custom-quill mb-4 text-white"
+                    theme="snow"
+                  />
+                )}
+              />
+            </div>
 
-            {/* Media Previews */}
             <div className="mt-2 flex flex-wrap">
               {previewMedia.map((media, index) => (
                 <div
@@ -258,7 +261,6 @@ export default function CreatePost() {
               ))}
             </div>
 
-            {/* File Input */}
             <div className="mt-2 flex items-center justify-between">
               <div>
                 <label className="mr-2 cursor-pointer text-primary hover:text-info">
@@ -273,7 +275,6 @@ export default function CreatePost() {
                 </label>
               </div>
 
-              {/* Post Button with Loading State */}
               <button
                 type="submit"
                 className={`btn rounded-full bg-primary text-white ${

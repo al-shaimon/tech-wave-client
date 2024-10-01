@@ -29,27 +29,77 @@ body {
 }
 
 /* React Quill Rich Text Editor */
-.ql-container {
+.quill-wrapper {
+  cursor: text;
+  position: relative;
+}
+
+.quill-wrapper .ql-container {
+  border: none;
+  font-size: 16px;
+  height: auto;
   min-height: 150px;
 }
 
-.ql-editor {
-  font-size: 16px;
+.quill-wrapper .ql-editor {
+  min-height: 150px;
+  padding: 12px 15px;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
 
 .custom-quill .ql-editor.ql-blank::before {
   color: #8f8a8a;
+  font-style: italic;
+  left: 15px;
+  right: 15px;
   opacity: 1;
 }
 
-.custom-quill .ql-container {
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
+.quill-wrapper .ql-toolbar {
+  border: none;
+  border-bottom: 1px solid #ccc;
 }
 
-.custom-quill .ql-editor {
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
+/* Ensure the Quill container takes full height of its wrapper */
+.quill-wrapper .quill,
+.quill-wrapper .ql-container,
+.quill-wrapper .ql-editor {
+  height: 100%;
+}
+
+/* Make the entire Quill area clickable */
+.quill-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+/* Ensure toolbar and editor are above the clickable area */
+.quill-wrapper .ql-toolbar,
+.quill-wrapper .ql-container {
+  position: relative;
+  z-index: 2;
+}
+
+/* Additional styles for better visibility in dark mode */
+.quill-wrapper .ql-toolbar {
+  background-color: #2a2a2a;
+}
+
+.quill-wrapper .ql-toolbar .ql-stroke {
+  stroke: #ffffff;
+}
+
+.quill-wrapper .ql-toolbar .ql-fill {
+  fill: #ffffff;
+}
+
+.quill-wrapper .ql-toolbar .ql-picker {
+  color: #ffffff;
 }
