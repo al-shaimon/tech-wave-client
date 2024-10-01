@@ -28,6 +28,7 @@ body {
   animation: fade-in-up 0.3s ease-out;
 }
 
+/* React Quill Rich Text Editor */
 .ql-container {
   min-height: 150px;
 }
@@ -39,4 +40,16 @@ body {
 .custom-quill .ql-editor.ql-blank::before {
   color: #8f8a8a;
   opacity: 1;
+}
+
+.custom-quill .ql-container {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.custom-quill .ql-editor {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }

@@ -58,12 +58,13 @@ export default function CreatePost() {
       try {
         const decodedUser: User = jwtDecode(token); // Decode JWT token
         setUser(decodedUser); // Set user state with decoded info
+        console.log("User decoded:", decodedUser);
       } catch (error) {
         console.error("Invalid token:", error);
-        // toast.error("Failed to decode user information. Please log in again.");
+        toast.error("Failed to decode user information. Please log in again.");
       }
     } else {
-      // toast.error("User not found in localStorage.");
+      toast.error("User not found in localStorage.");
     }
   }, []);
 
@@ -178,8 +179,7 @@ export default function CreatePost() {
   const quillModules = {
     toolbar: [
       [{ header: [1, 2, false] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ list: "bullet" }],
+      ["bold", "italic", "underline", "strike", { list: "bullet" }],
     ],
   };
 
@@ -217,7 +217,7 @@ export default function CreatePost() {
               />
             </div>
           )}
-          <div className="flex-1">
+          <div className="w-32 flex-1 md:w-96">
             <Controller
               name="content"
               control={control}
@@ -228,7 +228,7 @@ export default function CreatePost() {
                   placeholder="Share your tech journey…"
                   modules={quillModules}
                   formats={quillFormats}
-                  className="custom-quill mb-4 text-white"
+                  className="custom-quill mb-4 text-white" // Add custom CSS class here
                 />
               )}
             />
