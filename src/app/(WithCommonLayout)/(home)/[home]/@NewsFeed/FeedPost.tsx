@@ -14,6 +14,7 @@ interface User {
   profilePhoto: string;
   username: string;
   name: string;
+  isVerified: boolean;
 }
 
 interface Post {
@@ -208,6 +209,8 @@ export default function FeedPost({ post }: { post: Post }) {
     }
   };
 
+  console.log("Post data:", post);
+
   return (
     <div className="mb-4 rounded-lg bg-base-100 py-4 shadow-md md:w-full md:p-4">
       <div className="flex items-start">
@@ -220,8 +223,19 @@ export default function FeedPost({ post }: { post: Post }) {
         />
         <div className="ml-2 w-full text-sm md:ml-4 md:text-base">
           <div className="flex justify-between">
-            <div>
+            <div className="flex items-center">
               <span className="font-bold">{post.user.name}</span>{" "}
+              {post.user.isVerified === true ? (
+                <Image
+                  className="ml-[3px] mr-[5px]"
+                  src="/verified.svg"
+                  alt="Verified"
+                  width={20}
+                  height={20}
+                />
+              ) : (
+                ""
+              )}
               <span className="text-gray-500">{post.user.username}</span>
               <span className="ml-3 text-gray-500">•</span>
               <span className="ml-3 text-gray-500">{timeAgo}</span>

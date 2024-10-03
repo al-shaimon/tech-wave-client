@@ -9,6 +9,7 @@ interface User {
   name: string;
   profilePhoto: string;
   email: string;
+  isVerified: boolean;
 }
 
 interface PostData {
@@ -50,6 +51,7 @@ export default function PostList({ initialPosts }: PostListProps) {
                 name: post?.user?.name,
                 username: `@${post?.user?.email?.split("@")[0]}`,
                 profilePhoto: post?.user?.profilePhoto,
+                isVerified: post.user.isVerified,
               },
               content: post.content,
               images: post.images,
