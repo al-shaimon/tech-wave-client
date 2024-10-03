@@ -1,29 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-// CreatePost.tsx
 import Image from "next/image";
-import { useState, useRef, forwardRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css";
 import { toast } from "sonner";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { useRouter } from "next/navigation";
+import envConfig from "@/config/envConfig";
 
 const ReactQuill = dynamic(
-  () =>
-    import("react-quill").then((mod) => {
-      const QuillWithRef = forwardRef((props: any, ref) => (
-        <mod.default {...props} ref={ref} />
-      ));
-      QuillWithRef.displayName = "QuillWithRef";
-      return QuillWithRef;
-    }),
+  () => import("react-quill").then((mod) => mod.default),
   { ssr: false },
 );
 
 interface User {
+  id: string;
+  _id: string;
   name: string;
   username: string;
   profilePhoto: string;
@@ -35,14 +31,21 @@ interface PostData {
   videos: string[];
 }
 
+interface Category {
+  _id: string;
+  name: string;
+}
+
 export default function CreatePost() {
   const [user, setUser] = useState<User | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [previewMedia, setPreviewMedia] = useState<
     Array<{ type: "image" | "video"; url: string }>
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [localFiles, setLocalFiles] = useState<File[]>([]);
   const quillRef = useRef<any>(null);
+  const router = useRouter();
 
   const { control, handleSubmit, reset } = useForm<PostData>({
     defaultValues: {
@@ -58,15 +61,25 @@ export default function CreatePost() {
       try {
         const decodedUser: User = jwtDecode(token);
         setUser(decodedUser);
-        console.log("User decoded:", decodedUser);
       } catch (error) {
         console.error("Invalid token:", error);
         toast.error("Failed to decode user information. Please log in again.");
       }
-    } else {
-      toast.error("User not found in localStorage.");
     }
+
+    // Fetch categories
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${envConfig.baseApi}/post-categories`);
+      setCategories(response.data.data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to fetch categories");
+    }
+  };
 
   const uploadToCloudinary = async (file: File): Promise<string | null> => {
     try {
@@ -99,9 +112,14 @@ export default function CreatePost() {
       return;
     }
 
+    if (categories.length === 0) {
+      toast.error("No categories available. Please try again later.");
+      return;
+    }
+
     try {
-      toast.info("Posting...", { duration: 2000 });
       setIsLoading(true);
+      toast.info("Creating post...", { duration: 2000 });
 
       const uploadedUrls = await Promise.all(
         localFiles.map((file) => uploadToCloudinary(file)),
@@ -114,27 +132,42 @@ export default function CreatePost() {
         localFiles[index]?.type.startsWith("video"),
       );
 
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found");
+      }
+
       const newPost = {
-        user,
         content: data.content,
         images: uploadedImages,
         videos: uploadedVideos,
-        timestamp: new Date().toISOString(),
-        votes: 0,
-        comments: 3,
+        category: categories[0]._id, // Use the first category
+        user: user.id,
       };
 
-      console.log("New post created:", newPost);
+      console.log("Creating post:", newPost);
 
-      // Simulate API call
-      // await axios.post("/api/posts", newPost);
+      const response = await axios.post(`${envConfig.baseApi}/posts`, newPost, {
+        headers: {
+          Authorization: `${token}`,
+        },
+      });
+
+      console.log("New post created:", response.data);
+      toast.success("Post created successfully!");
 
       reset();
       setPreviewMedia([]);
       setLocalFiles([]);
-      setIsLoading(false);
-    } catch (error) {
+
+      // Revalidate the posts tag
+      await fetch("/api/revalidate?tag=posts");
+
+      router.refresh(); // Refresh the page to update the newsfeed
+    } catch (error: any) {
       console.error("Error creating post:", error);
+      toast.error(error.response?.data?.message || "Failed to create post");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -226,7 +259,7 @@ export default function CreatePost() {
                 render={({ field }) => (
                   <ReactQuill
                     {...field}
-                    ref={quillRef}
+                    // ref={quillRef}
                     placeholder="Share your tech journey…"
                     modules={quillModules}
                     formats={quillFormats}

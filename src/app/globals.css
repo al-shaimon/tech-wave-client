@@ -60,6 +60,8 @@ body {
 .quill-wrapper .ql-toolbar {
   border: none;
   border-bottom: 1px solid #ccc;
+  position: relative;
+  z-index: 20; /* Increase z-index */
 }
 
 /* Ensure the Quill container takes full height of its wrapper */
@@ -81,10 +83,9 @@ body {
 }
 
 /* Ensure toolbar and editor are above the clickable area */
-.quill-wrapper .ql-toolbar,
 .quill-wrapper .ql-container {
   position: relative;
-  z-index: 2;
+  z-index: 10; /* Lower than toolbar but higher than the wrapper */
 }
 
 /* Additional styles for better visibility in dark mode */
@@ -102,4 +103,81 @@ body {
 
 .quill-wrapper .ql-toolbar .ql-picker {
   color: #ffffff;
+}
+
+/* Ensure dropdown menus appear above everything else and are readable */
+.ql-toolbar .ql-picker-options {
+  z-index: 30 !important; /* Higher than toolbar */
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+}
+
+.ql-toolbar .ql-picker-item {
+  color: #ffffff !important;
+}
+
+.ql-toolbar .ql-picker-item:hover {
+  color: #0066cc !important;
+  /* background-color: #ffffff !important; */
+}
+
+/* Style for the selected item in the dropdown */
+.ql-toolbar .ql-picker-item.ql-selected {
+  color: #0066cc !important;
+  /* background-color: #ffffff !important; */
+}
+
+/* Adjust placeholder text z-index */
+.ql-editor.ql-blank::before {
+  z-index: 5 !important; /* Lower than toolbar and dropdown */
+}
+
+/* Styles for ReactMarkdown rendered content */
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 0;
+  margin-bottom: 0.3em;
+}
+
+.markdown-content p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 1.5em;
+  margin-bottom: 0.75em;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25em;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #ccc;
+  padding-left: 1em;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.markdown-content pre {
+  background-color: #f0f0f0;
+  padding: 1em;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.markdown-content code {
+  background-color: #f0f0f0;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
 }

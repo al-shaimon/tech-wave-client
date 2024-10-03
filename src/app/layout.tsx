@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+// import { UserProvider } from "@/context/user.provider";
 
 const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
@@ -22,10 +23,12 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="dark">
       <body className={poppins.className}>
+        {/* <UserProvider> */}
         <div className="mx-auto max-w-screen-lg rounded-md border-grey md:border">
           {children}
           <Toaster />
         </div>
+        {/* </UserProvider> */}
       </body>
     </html>
   );

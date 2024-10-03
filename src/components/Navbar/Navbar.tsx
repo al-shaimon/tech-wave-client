@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import LogoutButton from "@/components/Navbar/LogoutButton";
 
 interface ExtendedJwtPayload extends JwtPayload {
+  role: string;
   profilePhoto?: string;
 }
 
@@ -99,13 +100,27 @@ export default function Navbar() {
             </div>
             <ul
               tabIndex={0}
-              className="menu dropdown-content menu-sm z-[1] mt-3 w-52 rounded-box bg-base-100 p-2 shadow"
+              className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-100 p-2 shadow"
             >
-              <li>
+              {user.role === "admin" ? (
+                <li>
+                  <Link href="/admin/dashboard" className="justify-between">
+                    Dashboard
+                  </Link>
+                </li>
+              ) : null}
+              {user.role === "user" ? (
+                <li>
+                  <Link href="/profile" className="justify-between">
+                    Profile
+                  </Link>
+                </li>
+              ) : null}
+              {/* <li>
                 <Link href="/profile" className="justify-between">
                   Profile
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <a>Settings</a>
               </li>

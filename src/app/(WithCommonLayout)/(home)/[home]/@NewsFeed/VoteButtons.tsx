@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface VoteButtonsProps {
   initialVotes: number;
@@ -10,19 +13,46 @@ export default function VoteButtons({
   initialVotes,
   commentsCount,
 }: VoteButtonsProps) {
+  const [user, setUser] = useState(null);
   const [votes, setVotes] = useState(initialVotes);
   const [hasUpVoted, setHasUpVoted] = useState(false);
   const [hasDownVoted, setHasDownVoted] = useState(false);
   const [hoverUpVote, setHoverUpVote] = useState(false);
   const [hoverDownVote, setHoverDownVote] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decodedUser: any = jwtDecode(token);
+        setUser(decodedUser);
+        console.log("User decoded:", decodedUser);
+      } catch (error) {
+        console.error("Invalid token:", error);
+        // toast.error("Failed to decode user information. Please log in again.");
+      }
+    } else {
+      // toast.error("User not found in localStorage.");
+    }
+  }, []);
+
+  // Redirect to login if not authenticated
+  const requireLogin = () => {
+    if (!user) {
+      router.push("/login");
+      return false;
+    }
+    return true;
+  };
 
   const handleUpVote = () => {
+    if (!requireLogin()) return;
+
     if (hasUpVoted) {
-      // If already upVoted, clicking again removes the upvote
       setVotes(votes - 1);
       setHasUpVoted(false);
     } else {
-      // If downVoted, remove the downVote first and add the upVote
       if (hasDownVoted) {
         setVotes(votes + 2); // Remove the downVote and add the upVote
         setHasDownVoted(false);
@@ -34,12 +64,12 @@ export default function VoteButtons({
   };
 
   const handleDownVote = () => {
+    if (!requireLogin()) return;
+
     if (hasDownVoted) {
-      // If already downVoted, clicking again removes the downVote
       setVotes(votes + 1);
       setHasDownVoted(false);
     } else {
-      // If upVoted, remove the upVote first and add the downVote
       if (hasUpVoted) {
         setVotes(votes - 2); // Remove the upVote and add the downVote
         setHasUpVoted(false);
@@ -47,6 +77,31 @@ export default function VoteButtons({
         setVotes(votes - 1); // Just add the downVote
       }
       setHasDownVoted(true);
+    }
+  };
+
+  const handleCommentClick = () => {
+    if (!requireLogin()) return;
+    // Redirect to the comment section or open the comment modal
+    console.log("Comment button clicked");
+  };
+
+  const handleShareClick = () => {
+    if (!requireLogin()) return;
+
+    // Social media share logic using the navigator.share API
+    if (navigator.share) {
+      navigator
+        .share({
+          title: "Check out this post!",
+          text: "Here is an interesting post I found.",
+          url: window.location.href, // Current post URL
+        })
+        .then(() => console.log("Post shared successfully"))
+        .catch((error) => console.error("Error sharing:", error));
+    } else {
+      // Fallback if the `navigator.share` API is not supported
+      alert("Sharing is not supported on this browser.");
     }
   };
 
@@ -102,7 +157,10 @@ export default function VoteButtons({
       </div>
 
       {/* Comment Section with Icon */}
-      <div className="ml-4 flex cursor-pointer items-center rounded-full bg-greyBg px-3 py-1">
+      <div
+        className="ml-4 flex cursor-pointer items-center rounded-full bg-greyBg px-3 py-1"
+        onClick={handleCommentClick}
+      >
         <svg
           aria-hidden="true"
           className="icon-comment"
@@ -119,7 +177,10 @@ export default function VoteButtons({
       </div>
 
       {/* Share Section with Icon */}
-      <div className="ml-4 flex cursor-pointer items-center rounded-full bg-greyBg px-3 py-1">
+      <div
+        className="ml-4 flex cursor-pointer items-center rounded-full bg-greyBg px-3 py-1"
+        onClick={handleShareClick}
+      >
         <svg
           aria-hidden="true"
           className="icon-share"

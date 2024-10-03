@@ -63,12 +63,14 @@ export default function FeedPost({ post }: { post: Post }) {
           </div>
 
           {/* Post Content with ReactMarkdown and rehypeRaw for HTML support */}
-          <ReactMarkdown
-            className="prose-sm md:prose-lg prose text-gray-100"
-            rehypePlugins={[rehypeRaw]} // Allow rendering raw HTML
-          >
-            {post.content}
-          </ReactMarkdown>
+          <div className="markdown-content">
+            <ReactMarkdown
+              className="prose-sm text-white md:prose-lg prose-h1:text-2xl prose-h2:text-xl prose-p:text-sm md:prose-h1:text-4xl md:prose-h2:text-3xl md:prose-p:text-[15px]"
+              rehypePlugins={[rehypeRaw]} // Allow rendering raw HTML
+            >
+              {post.content}
+            </ReactMarkdown>
+          </div>
 
           {/* Media (Images and Videos) */}
           {post.images.length > 0 && (
