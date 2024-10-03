@@ -11,17 +11,9 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    // Add a rule to ignore .map files (for client-side and server-side builds)
-    config.module.rules.push({
-      test: /\.map$/,
-      use: "null-loader",
-    });
-
-    // If you need additional exclusions for `chrome-aws-lambda`:
-    config.externals = isServer
-      ? config.externals.concat("chrome-aws-lambda")
-      : config.externals;
-
+    if (isServer) {
+      config.externals = [...config.externals, "chrome-aws-lambda"];
+    }
     return config;
   },
 };

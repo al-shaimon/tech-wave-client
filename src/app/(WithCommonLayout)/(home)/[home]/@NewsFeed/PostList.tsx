@@ -47,9 +47,9 @@ export default function PostList({ initialPosts }: PostListProps) {
             post={{
               _id: post._id,
               user: {
-                name: post.user.name,
-                username: `@${post.user.email.split("@")[0]}`,
-                profilePhoto: post.user.profilePhoto,
+                name: post?.user?.name,
+                username: `@${post?.user?.email?.split("@")[0]}`,
+                profilePhoto: post?.user?.profilePhoto,
               },
               content: post.content,
               images: post.images,
