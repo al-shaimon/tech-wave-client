@@ -10,7 +10,11 @@ interface StripeModalProps {
   onClose: () => void;
 }
 
-export default function StripeModal({ amount, onSuccess, onClose }: StripeModalProps) {
+export default function StripeModal({
+  amount,
+  onSuccess,
+  onClose,
+}: StripeModalProps) {
   const handlePayment = async () => {
     const stripe = await stripePromise;
     const response = await fetch("/api/stripe-session", {

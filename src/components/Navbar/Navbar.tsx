@@ -5,6 +5,7 @@ import LoginSignupModal from "./LoginSignupModal"; // Import the modal
 import Link from "next/link";
 import { jwtDecode, JwtPayload } from "jwt-decode"; // Corrected import
 import LogoutButton from "@/components/Navbar/LogoutButton";
+import { useRouter } from "next/navigation";
 
 interface ExtendedJwtPayload extends JwtPayload {
   role: string;
@@ -14,7 +15,7 @@ interface ExtendedJwtPayload extends JwtPayload {
 export default function Navbar() {
   const [user, setUser] = useState<ExtendedJwtPayload | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-
+  const router = useRouter();
   useEffect(() => {
     // Safely access localStorage on the client side
     const token = localStorage.getItem("token");
@@ -29,6 +30,14 @@ export default function Navbar() {
       setProfilePhoto(photo);
     }
   }, []); // Runs once after component mounts
+
+  const handleHome = async () => {
+    router.push("/"); // Navigate to the home page
+    // Revalidate the posts tag
+    await fetch("/api/revalidate?tag=posts");
+
+    router.refresh(); // Refresh the page to update the
+  };
 
   return (
     <div className="navbar my-2 border-b border-grey">
@@ -79,9 +88,9 @@ export default function Navbar() {
         </div>
 
         <div className="hidden md:block">
-          <Link href="/">
+          <button onClick={handleHome}>
             <Image src="/l3.png" width={150} height={50} alt="TechWave" />
-          </Link>
+          </button>
         </div>
       </div>
 

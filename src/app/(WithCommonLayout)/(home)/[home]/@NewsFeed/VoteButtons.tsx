@@ -1,15 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import envConfig from "@/config/envConfig";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface VoteButtonsProps {
+  postId: string;
   initialVotes: number;
   commentsCount: number;
 }
 
 export default function VoteButtons({
+  postId,
   initialVotes,
   commentsCount,
 }: VoteButtonsProps) {
@@ -46,38 +49,67 @@ export default function VoteButtons({
     return true;
   };
 
+  // Helper function to update votes on the server
+  const updateVote = async (newVotes: number) => {
+    try {
+      const response = await fetch(`${envConfig.baseApi}/posts/${postId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          votes: newVotes,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to update votes:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error updating votes:", error);
+    }
+  };
+
   const handleUpVote = () => {
     if (!requireLogin()) return;
 
+    let updatedVotes = votes;
     if (hasUpVoted) {
-      setVotes(votes - 1);
+      updatedVotes = votes - 1;
       setHasUpVoted(false);
     } else {
       if (hasDownVoted) {
-        setVotes(votes + 2); // Remove the downVote and add the upVote
+        updatedVotes = votes + 2; // Remove downVote and add upVote
         setHasDownVoted(false);
       } else {
-        setVotes(votes + 1); // Just add the upVote
+        updatedVotes = votes + 1;
       }
       setHasUpVoted(true);
     }
+
+    setVotes(updatedVotes);
+    updateVote(updatedVotes);
   };
 
   const handleDownVote = () => {
     if (!requireLogin()) return;
 
+    let updatedVotes = votes;
     if (hasDownVoted) {
-      setVotes(votes + 1);
+      updatedVotes = votes + 1;
       setHasDownVoted(false);
     } else {
       if (hasUpVoted) {
-        setVotes(votes - 2); // Remove the upVote and add the downVote
+        updatedVotes = votes - 2; // Remove upVote and add downVote
         setHasUpVoted(false);
       } else {
-        setVotes(votes - 1); // Just add the downVote
+        updatedVotes = votes - 1;
       }
       setHasDownVoted(true);
     }
+
+    setVotes(updatedVotes);
+    updateVote(updatedVotes);
   };
 
   const handleCommentClick = () => {
