@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 import Image from "next/image";
 import { format } from "date-fns";
 import VoteButtons from "./VoteButtons";
@@ -5,6 +7,8 @@ import PostLightGallery from "./PostLightGallery";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import { useState } from "react";
+import jsPDF from "jspdf";
+import htmlParser from "html-react-parser";
 
 interface User {
   profilePhoto: string;
@@ -61,6 +65,27 @@ export default function FeedPost({ post }: { post: Post }) {
     timeAgo = "Invalid date";
   }
 
+  // Helper function to convert an image URL to a Base64 data URL
+  const convertImageToBase64 = (url: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image(); // Use the browser's native Image object
+      img.crossOrigin = "Anonymous"; // To handle CORS issues if the images are from a different origin
+      img.src = url;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL("image/jpeg");
+        resolve(dataURL);
+      };
+      img.onerror = () => {
+        reject(new Error("Could not load image"));
+      };
+    });
+  };
+
   const handleDownload = async () => {
     setLoading(true);
 
@@ -72,78 +97,113 @@ export default function FeedPost({ post }: { post: Post }) {
       // Generate the dynamic filename
       const fileName = `${post.user.name}'s post ${formattedDate}.pdf`;
 
-      const htmlContent = `
-        <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; }
-            h1 { font-size: 24px; font-weight: bold; }
-            h2 { font-size: 20px; font-weight: semibold; }
-            p { font-size: 14px; margin-top: 5px; }
-            img { max-width: 100%; margin-top: 5px; }
-          </style>
-        </head>
-        <body>
-          <h1>${post.user.name}'s Post</h1>
-          <div>
-            <p>${post.content}</p>
-            ${
-              post.images && post.images.length > 0
-                ? post.images
-                    .map((image) => `<img src="${image}" alt="Image" />`)
-                    .join("")
-                : ""
-            }
-            ${
-              post.videos && post.videos.length > 0
-                ? post.videos
-                    .map(
-                      (video) => `
-                    <p>
-                      <a href="${video}" target="_blank">Watch Video</a>
-                    </p>
-                    `,
-                    )
-                    .join("")
-                : ""
-            }
-          </div>
-        </body>
-        </html>
-      `;
+      const doc = new jsPDF();
 
-      const response = await fetch("/api/generate-pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // Add post title
+      doc.setFontSize(20);
+      doc.text(`${post.user.name}'s Post`, 10, 20);
+
+      // Parse and render the post content from HTML
+      let yPosition = 30;
+      htmlParser(post.content, {
+        replace: (domNode) => {
+          if (domNode.type === "tag") {
+            switch (domNode.name) {
+              case "h1":
+                doc.setFontSize(18);
+                doc.text(
+                  (domNode.children[0] as any).data || "",
+                  10,
+                  yPosition,
+                );
+                yPosition += 10;
+                break;
+              case "h2":
+                doc.setFontSize(16);
+                doc.text(
+                  (domNode.children[0] as unknown as Text).data || "",
+                  10,
+                  yPosition,
+                );
+                yPosition += 10;
+                break;
+              case "p":
+                doc.setFontSize(14);
+                doc.text(
+                  (domNode.children[0] as any).data || "",
+                  10,
+                  yPosition,
+                );
+                yPosition += 10;
+                break;
+              case "strong":
+                doc.setFont("Helvetica", "bold");
+                doc.text(
+                  (domNode.children[0] as unknown as Text).data || "",
+                  10,
+                  yPosition,
+                );
+                yPosition += 10;
+                break;
+              default:
+                // For other unsupported tags, just add text
+                doc.setFontSize(14);
+                doc.text(
+                  (domNode.children[0] as unknown as Text).data || "",
+                  10,
+                  yPosition,
+                );
+                yPosition += 10;
+                break;
+            }
+          }
         },
-        body: JSON.stringify({ content: htmlContent }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
+      // Adjust the position for images
+      yPosition += 10;
+
+      // Add images (if any)
+      if (post.images && post.images.length > 0) {
+        for (const image of post.images) {
+          // Convert the image to base64 before adding it to the PDF
+          const base64Image = await convertImageToBase64(image);
+
+          // Check if the current yPosition would exceed the page height
+          if (yPosition + 120 > doc.internal.pageSize.height) {
+            doc.addPage(); // Add a new page
+            yPosition = 10; // Reset yPosition for new page
+          }
+
+          doc.addImage(base64Image, "JPEG", 10, yPosition, 180, 120); // Adjust width and height as necessary
+          yPosition += 130; // Adjust spacing between images
+        }
       }
 
-      // Get the PDF as a Blob
-      const pdfBlob = await response.blob();
+      // Check if we are near the bottom of the page and add a new page if necessary
+      if (yPosition > 260) {
+        // if there's no space for video links
+        doc.addPage();
+        yPosition = 20; // reset the position on the new page
+      }
 
-      // Create a URL for the Blob
-      const url = window.URL.createObjectURL(pdfBlob);
-      const link = document.createElement("a");
-      link.href = url;
+      // Add videos as links (if any)
+      if (post.videos && post.videos.length > 0) {
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 255); // Make the link blue for better visibility
+        post.videos.forEach((video) => {
+          doc.textWithLink(`Watch Video: ${video}`, 10, yPosition, {
+            url: video,
+          });
+          yPosition += 10;
+        });
+      }
 
-      // Set the dynamic filename
-      link.download = fileName;
-
-      // Trigger the download
-      link.click();
-
-      // Clean up the URL object
-      window.URL.revokeObjectURL(url);
-
+      // Save the PDF
+      doc.save(fileName);
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching or downloading PDF:", error);
+      console.error("Error generating or downloading PDF:", error);
       setLoading(false);
     }
   };
