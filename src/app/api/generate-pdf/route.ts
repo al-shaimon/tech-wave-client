@@ -30,11 +30,13 @@ export async function POST(request: Request) {
 
   const pdfBuffer = await generatePDF(content);
 
+  // Return the PDF as a binary stream response
   return new NextResponse(pdfBuffer, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="post.pdf"`,
+      "Content-Length": pdfBuffer.length.toString(),
     },
   });
 }

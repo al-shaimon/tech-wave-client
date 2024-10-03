@@ -64,19 +64,27 @@ export default function FeedPost({ post }: { post: Post }) {
   const handleDownload = async () => {
     setLoading(true);
 
-    const htmlContent = `
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; }
-          h1 { font-size: 24px; font-weight: bold; }
-          h2 { font-size: 20px; font-weight: semibold; }
-          p { font-size: 14px; margin-top: 5px; }
-          img { max-width: 100%; margin-top: 5px; }
-        </style>
-      </head>
-      <body>
-        <h1>${post.user.name}'s Post</h1>
+    try {
+      // Format the post date
+      const postDate = new Date(post.timestamp);
+      const formattedDate = format(postDate, "dd-MMMM-yyyy"); // e.g., 20-March-2024
+
+      // Generate the dynamic filename
+      const fileName = `${post.user.name}'s post ${formattedDate}.pdf`;
+
+      const htmlContent = `
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; }
+            h1 { font-size: 24px; font-weight: bold; }
+            h2 { font-size: 20px; font-weight: semibold; }
+            p { font-size: 14px; margin-top: 5px; }
+            img { max-width: 100%; margin-top: 5px; }
+          </style>
+        </head>
+        <body>
+          <h1>${post.user.name}'s Post</h1>
           <div>
             <p>${post.content}</p>
             ${
@@ -85,7 +93,7 @@ export default function FeedPost({ post }: { post: Post }) {
                     .map((image) => `<img src="${image}" alt="Image" />`)
                     .join("")
                 : ""
-            } 
+            }
             ${
               post.videos && post.videos.length > 0
                 ? post.videos
@@ -100,27 +108,44 @@ export default function FeedPost({ post }: { post: Post }) {
                 : ""
             }
           </div>
-      </body>
-      </html>
-    `;
+        </body>
+        </html>
+      `;
 
-    const response = await fetch("/api/generate-pdf", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ content: htmlContent }),
-    });
+      const response = await fetch("/api/generate-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content: htmlContent }),
+      });
 
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "post.pdf";
-    link.click();
-    window.URL.revokeObjectURL(url);
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
 
-    setLoading(false);
+      // Get the PDF as a Blob
+      const pdfBlob = await response.blob();
+
+      // Create a URL for the Blob
+      const url = window.URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Set the dynamic filename
+      link.download = fileName;
+
+      // Trigger the download
+      link.click();
+
+      // Clean up the URL object
+      window.URL.revokeObjectURL(url);
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching or downloading PDF:", error);
+      setLoading(false);
+    }
   };
 
   return (
