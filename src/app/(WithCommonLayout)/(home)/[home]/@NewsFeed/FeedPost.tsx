@@ -234,7 +234,7 @@ export default function FeedPost({ post }: { post: Post }) {
                   height={20}
                 />
               ) : (
-                ""
+                <span className="mx-[5px]"></span>
               )}
               <span className="text-gray-500">{post.user.username}</span>
               <span className="ml-3 text-gray-500">•</span>

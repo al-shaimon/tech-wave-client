@@ -82,6 +82,7 @@ export default function UserPosts({ userId }: UserPostsProps) {
                 profilePhoto: userInfo.profilePhoto,
                 username: `@${userInfo.email.split("@")[0]}`,
                 name: userInfo.name,
+                isVerified: userInfo.isVerified,
               },
               timestamp: post.createdAt,
             }}
