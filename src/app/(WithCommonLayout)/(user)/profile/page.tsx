@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { toast } from "sonner";
-import EditProfileModal from "@/app/(WithCommonLayout)/(user)/profile/@profile/EditProfileModal";
-import VerificationModal from "@/app/(WithCommonLayout)/(user)/profile/@profile/VerificationModal";
+import EditProfileModal from "./@profile/EditProfileModal";
+import VerificationModal from "./@profile/VerificationModal";
 import envConfig from "@/config/envConfig";
 import { useRouter } from "next/navigation";
 
@@ -24,12 +25,16 @@ export default function Profile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const router = useRouter();
+  const [profilePhoto, setProfilePhoto] = useState<any | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
         const decodedUser: User = jwtDecode(token);
+        setProfilePhoto(
+          localStorage.getItem("profilePhoto") || decodedUser.profilePhoto,
+        );
         setUser(decodedUser);
       } catch (error) {
         console.error("Invalid token:", error);
@@ -55,6 +60,7 @@ export default function Profile() {
 
       if (response.data.success) {
         setUser((prevUser) => ({ ...prevUser!, ...updatedData }));
+        localStorage.setItem("profilePhoto", updatedData.profilePhoto!);
         toast.success("Profile updated successfully!");
         setShowEditModal(false);
       }
@@ -89,7 +95,7 @@ export default function Profile() {
         <div className="flex items-center">
           <Image
             className="rounded-full"
-            src={user.profilePhoto}
+            src={profilePhoto!}
             alt={user.name}
             width={80}
             height={80}
@@ -120,7 +126,7 @@ export default function Profile() {
           </div>
         </div>
         <button
-          className="rounded border border-gray-300 px-4 py-2 hover:bg-gray-100"
+          className="rounded border border-gray-300 px-4 py-2 hover:bg-base-300"
           onClick={() => setShowEditModal(true)}
         >
           Edit Profile

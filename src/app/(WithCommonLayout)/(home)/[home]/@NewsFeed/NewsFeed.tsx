@@ -1,11 +1,11 @@
-import PostList from "@/app/(WithCommonLayout)/(home)/[home]/@NewsFeed/PostList";
+import PostList from "./PostList";
 import envConfig from "@/config/envConfig";
 
 // Server-side function to fetch posts
 async function getPosts() {
   try {
     const response = await fetch(`${envConfig.baseApi}/posts`, {
-      next: { tags: ['posts'] },
+      next: { tags: ["posts"] },
     });
     const data = await response.json();
     return data.success ? data.data : [];

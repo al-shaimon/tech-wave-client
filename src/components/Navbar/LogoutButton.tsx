@@ -14,6 +14,8 @@ export default function LogoutButton() {
 
       localStorage.removeItem("token");
 
+      localStorage.removeItem("profilePhoto");
+
       if (response.ok) {
         // On success, redirect to the home page or refresh the app state
         router.push("/");

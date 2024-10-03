@@ -1,6 +1,6 @@
 import React from "react";
-import Post from "@/app/(WithCommonLayout)/(home)/[home]/@Post/page";
-import NewsFeed from "@/app/(WithCommonLayout)/(home)/[home]/@NewsFeed/NewsFeed";
+import Post from "./[home]/@Post/page";
+import NewsFeed from "./[home]/@NewsFeed/NewsFeed";
 
 export default function Home() {
   return (

@@ -24,7 +24,9 @@ export default function EditProfileModal({
 }: EditProfileModalProps) {
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone);
-  const [profilePhoto, setProfilePhoto] = useState(user.profilePhoto);
+  const [profilePhoto, setProfilePhoto] = useState(
+    localStorage.getItem("profilePhoto") || user.profilePhoto,
+  );
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 import SkeletonLoader from "@/components/SkeletonLoader";
-import FeedPost from "@/app/(WithCommonLayout)/(home)/[home]/@NewsFeed/FeedPost";
+import FeedPost from "./FeedPost";
 
 interface User {
   name: string;

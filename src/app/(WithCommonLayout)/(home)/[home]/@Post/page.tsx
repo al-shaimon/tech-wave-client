@@ -39,6 +39,7 @@ interface Category {
 export default function CreatePost() {
   const [user, setUser] = useState<User | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [profilePhoto, setProfilePhoto] = useState<any | null>(null);
   const [previewMedia, setPreviewMedia] = useState<
     Array<{ type: "image" | "video"; url: string }>
   >([]);
@@ -61,6 +62,9 @@ export default function CreatePost() {
       try {
         const decodedUser: User = jwtDecode(token);
         setUser(decodedUser);
+        setProfilePhoto(
+          localStorage.getItem("profilePhoto") || decodedUser.profilePhoto,
+        );
       } catch (error) {
         console.error("Invalid token:", error);
         toast.error("Failed to decode user information. Please log in again.");
@@ -244,7 +248,7 @@ export default function CreatePost() {
             <div className="mr-4">
               <Image
                 className="rounded-full"
-                src={user.profilePhoto}
+                src={profilePhoto!}
                 width={48}
                 height={48}
                 alt="Profile"

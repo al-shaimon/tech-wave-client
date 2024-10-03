@@ -9,6 +9,11 @@ import React from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
+import { jwtDecode, JwtPayload } from "jwt-decode";
+
+interface CustomJwtPayload extends JwtPayload {
+  profilePhoto?: string;
+}
 
 // Form input types
 interface LoginFormInput {
@@ -70,13 +75,19 @@ export default function LoginSignupModal() {
 
       const token = response.data.token;
 
-      // Store token in local storage
+      // Store token in localStorage
       localStorage.setItem("token", token);
 
       // Store the token in cookies via the server-side API route
+      const decodedUser = jwtDecode<CustomJwtPayload>(token);
       await setTokenInCookies(token);
-
       toast.success("Login successful!");
+
+      // Store profilePhoto in localStorage (if it exists)
+      if (decodedUser.profilePhoto) {
+        localStorage.setItem("profilePhoto", decodedUser.profilePhoto);
+      }
+
       closeModal();
       window.location.href = "/";
     } catch (error: any) {

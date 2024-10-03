@@ -8,6 +8,11 @@ import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
 import Image from "next/image";
 import Link from "next/link";
+import { jwtDecode, JwtPayload } from "jwt-decode";
+
+interface CustomJwtPayload extends JwtPayload {
+  profilePhoto?: string;
+}
 
 interface LoginFormInput {
   email: string;
@@ -45,9 +50,15 @@ export default function LoginPage() {
       localStorage.setItem("token", token);
 
       // Store the token in cookies via the server-side API route
+      const decodedUser = jwtDecode<CustomJwtPayload>(token);
       await setTokenInCookies(token);
-
       toast.success("Login successful!");
+      
+      // Store profilePhoto in localStorage (if it exists)
+      if (decodedUser.profilePhoto) {
+        localStorage.setItem("profilePhoto", decodedUser.profilePhoto);
+      }
+
       // Redirect to home or desired page
       window.location.href = "/";
     } catch (error: any) {
