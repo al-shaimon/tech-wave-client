@@ -60,7 +60,7 @@ export default function UserPosts({ userId }: UserPostsProps) {
   }
 
   return (
-    <div>
+    <div className="m-1 md:m-3">
       {posts.length > 0 ? (
         posts.map((post) => (
           <FeedPost

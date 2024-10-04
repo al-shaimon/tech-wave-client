@@ -118,8 +118,10 @@ export default function FeedPost({ post }: { post: Post }) {
     timeAgo = "Invalid date";
   }
 
-  // const username = `@${post.user.email?.split("@")[0] || "unknown"}`;
-  const username = `${post.user.username || "unknown"}`;
+  const username2 = `@${post.user.email?.split("@")[0] || "unknown"}`;
+  const username = `${post.user.username || username2}`;
+
+  console.log("USER NAME", post.user);
 
   console.log("Post data:", post);
 
