@@ -24,8 +24,6 @@ export default function VoteButtons({
   const [hoverDownVote, setHoverDownVote] = useState(false);
   const router = useRouter();
 
-  console.log("COMMENTS COUNT FROM VARIOUS PAGE", commentsCount);
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {

@@ -156,7 +156,7 @@ export default function Profile() {
         <div className="flex items-center justify-between px-4">
           <div className="flex items-center">
             <Image
-              className="rounded-full"
+              className="h-12 w-12 rounded-full md:h-20 md:w-20"
               src={profilePhoto!}
               alt={user.name}
               width={80}
@@ -164,7 +164,7 @@ export default function Profile() {
             />
             <div className="ml-4">
               <div className="flex items-center">
-                <h2 className="text-2xl font-bold">{user.name}</h2>
+                <h2 className="font-bold md:text-2xl">{user.name}</h2>
                 {user.isVerified === true ? (
                   <>
                     <Image
@@ -177,18 +177,20 @@ export default function Profile() {
                   </>
                 ) : (
                   <button
-                    className="ml-2 rounded bg-blue-500 px-2 text-sm text-white"
+                    className="ml-2 rounded bg-blue-500 px-2 text-xs text-white md:text-sm"
                     onClick={handleVerification}
                   >
                     Get Verified
                   </button>
                 )}
               </div>
-              <p className="text-gray-500">@{user?.email?.split("@")[0]}</p>
+              <p className="text-xs text-gray-500 md:text-base">
+                @{user?.email?.split("@")[0]}
+              </p>
             </div>
           </div>
           <button
-            className="rounded border border-gray-300 px-4 py-2 hover:bg-base-300"
+            className="rounded border border-gray-300 px-4 py-2 text-xs hover:bg-base-300 md:text-base"
             onClick={() => setShowEditModal(true)}
           >
             Edit Profile
@@ -200,15 +202,25 @@ export default function Profile() {
             className="mr-4 cursor-pointer"
             onClick={() => setShowFollowersModal(true)}
           >
-            <span className="font-bold">{followersCount}</span>
-            <span className="text-gray-500"> Followers</span>
+            <span className="text-sm font-bold md:text-base">
+              {followersCount}
+            </span>
+            <span className="text-sm text-gray-500 md:text-base">
+              {" "}
+              Followers
+            </span>
           </div>
           <div
             className="cursor-pointer"
             onClick={() => setShowFollowingModal(true)}
           >
-            <span className="font-bold">{followingCount}</span>
-            <span className="text-gray-500"> Following</span>
+            <span className="text-sm font-bold md:text-base">
+              {followingCount}
+            </span>
+            <span className="text-sm text-gray-500 md:text-base">
+              {" "}
+              Following
+            </span>
           </div>
         </div>
       </div>

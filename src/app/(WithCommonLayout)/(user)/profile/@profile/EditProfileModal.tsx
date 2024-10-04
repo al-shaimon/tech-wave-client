@@ -70,7 +70,7 @@ export default function EditProfileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-md rounded-lg bg-base-300 p-6 transition-opacity">
+      <div className="mx-4 w-full max-w-md rounded-lg bg-base-300 p-6 transition-opacity md:mx-0">
         <h2 className="mb-4 text-center text-2xl font-bold">Edit Profile</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -106,7 +106,7 @@ export default function EditProfileModal({
                 alt="Profile"
                 width={64}
                 height={64}
-                className="mr-4 rounded-full"
+                className="mr-4 h-16 w-16 rounded-full"
               />
               <input
                 type="file"

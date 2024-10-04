@@ -122,7 +122,7 @@ export default function VerificationModal({
 }: VerificationModalProps) {
   return (
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-black bg-opacity-50 transition-opacity">
-      <div className="w-full max-w-md rounded-lg bg-base-300 p-6">
+      <div className="mx-4 w-full max-w-md rounded-lg bg-base-300 p-6 md:mx-0">
         <h2 className="mb-4 text-center text-2xl font-bold">Get Verified</h2>
         <p className="mb-4">
           Pay <span className="font-bold text-primary">$20</span> to get a blue

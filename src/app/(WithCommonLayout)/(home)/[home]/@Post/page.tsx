@@ -247,7 +247,7 @@ export default function CreatePost() {
           {user && (
             <div className="mr-4">
               <Image
-                className="rounded-full"
+                className="h-8 w-8 rounded-full md:h-12 md:w-12"
                 src={profilePhoto!}
                 width={48}
                 height={48}

@@ -108,7 +108,7 @@ export default function FollowersModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-md rounded-lg bg-base-300 p-6">
+      <div className="mx-4 w-full max-w-md rounded-lg bg-base-300 p-6 md:mx-0">
         <h2 className="mb-4 text-center text-2xl font-bold">Followers</h2>
         {loading ? (
           <p>
@@ -127,7 +127,7 @@ export default function FollowersModal({
                     alt={follower.name}
                     width={40}
                     height={40}
-                    className="rounded-full"
+                    className="h-10 w-10 rounded-full"
                   />
                   <div className="ml-3">
                     <div className="flex items-center">

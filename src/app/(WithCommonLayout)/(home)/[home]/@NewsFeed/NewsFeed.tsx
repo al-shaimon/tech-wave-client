@@ -19,7 +19,7 @@ export default async function NewsFeedPage() {
   const posts = await getPosts(); // Fetch posts on the server
 
   return (
-    <div className="my-2 border-t border-grey p-4">
+    <div className="my-2 border-t border-grey p-1 md:p-4">
       <PostList initialPosts={posts} />
     </div>
   );

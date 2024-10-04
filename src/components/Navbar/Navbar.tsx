@@ -55,7 +55,7 @@ export default function Navbar() {
 
       {/* Search Input Fields */}
       <div className="navbar-center">
-        <div className="form-control w-40 md:w-[300px] lg:w-[560px]">
+        <div className="form-control ml-2 w-40 md:w-[300px] lg:w-[560px]">
           <input
             type="text"
             placeholder="Search"

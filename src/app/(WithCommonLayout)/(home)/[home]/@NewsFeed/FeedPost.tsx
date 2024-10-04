@@ -42,7 +42,7 @@ interface Post {
   images: string[];
   videos: string[];
   votes: number;
-  comments: number | Array<{ user: { name: string }, content: string }>;
+  comments: number | Array<{ user: { name: string }; content: string }>;
 }
 
 export default function FeedPost({ post }: { post: Post }) {
@@ -87,7 +87,7 @@ export default function FeedPost({ post }: { post: Post }) {
   }, [post.user._id, userId]);
 
   try {
-    const postDate = new Date(post.timestamp || post.createdAt || '');
+    const postDate = new Date(post.timestamp || post.createdAt || "");
 
     if (isNaN(postDate.getTime())) {
       throw new Error("Invalid date");
@@ -109,12 +109,19 @@ export default function FeedPost({ post }: { post: Post }) {
       timeAgo = format(postDate, "MMM d, yyyy");
     }
   } catch (error) {
-    console.error("Error parsing date:", error, "Date value:", post.timestamp || post.createdAt);
+    console.error(
+      "Error parsing date:",
+      error,
+      "Date value:",
+      post.timestamp || post.createdAt,
+    );
     timeAgo = "Invalid date";
   }
 
+  // const username = `@${post.user.email?.split("@")[0] || "unknown"}`;
+  const username = `${post.user.username || "unknown"}`;
 
-  const username = `@${post.user.email?.split("@")[0] || "unknown"}`;
+  console.log("Post data:", post);
 
   // Helper function to convert an image URL to a Base64 data URL
   const convertImageToBase64 = (url: string): Promise<string> => {
@@ -141,7 +148,7 @@ export default function FeedPost({ post }: { post: Post }) {
     setLoading(true);
 
     try {
-      const postDate = new Date(post.createdAt || '');
+      const postDate = new Date(post.createdAt || "");
       const formattedDate = format(postDate, "dd-MMMM-yyyy");
       const fileName = `${post.user.name}'s post ${formattedDate}.pdf`;
 
@@ -298,10 +305,10 @@ export default function FeedPost({ post }: { post: Post }) {
   // };
 
   return (
-    <div className="mb-4 rounded-lg bg-base-100 py-4 shadow-md md:w-full md:p-4">
+    <div className="mb-4 rounded-lg border-grey bg-base-100 py-4 shadow-2xl md:w-full md:border md:p-4">
       <div className="flex items-start">
         <Image
-          className="rounded-full"
+          className="h-8 w-8 rounded-full md:h-12 md:w-12"
           src={post.user.profilePhoto || "/default-profile-photo.jpg"}
           alt={post.user.username || "default-username"}
           width={48}
@@ -406,7 +413,11 @@ export default function FeedPost({ post }: { post: Post }) {
             <VoteButtons
               postId={post._id}
               initialVotes={post.votes}
-              commentsCount={typeof post.comments === 'number' ? post.comments : post.comments.length}
+              commentsCount={
+                typeof post.comments === "number"
+                  ? post.comments
+                  : post.comments.length
+              }
             />
           </div>
         </div>
