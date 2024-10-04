@@ -11,6 +11,8 @@ import envConfig from "@/config/envConfig";
 import { useRouter } from "next/navigation";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import UserPosts from "./@profile/UserPosts";
+import FollowersModal from "@/app/(WithCommonLayout)/(user)/profile/@profile/FollowersModal";
+import FollowingModal from "@/app/(WithCommonLayout)/(user)/profile/@profile/FollowingModal";
 
 interface User {
   id: string;
@@ -20,6 +22,8 @@ interface User {
   phone: string;
   profilePhoto: string;
   role: string;
+  followersCount: number;
+  followingCount: number;
 }
 
 export default function Profile() {
@@ -27,44 +31,61 @@ export default function Profile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const router = useRouter();
-  const [profilePhoto, setProfilePhoto] = useState<any | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      try {
-        // Decode token to get user ID
-        const decodedUser: { id: string } = jwtDecode(token);
-        setProfilePhoto(localStorage.getItem("profilePhoto"));
-
-        axios
-          .get(`${envConfig.baseApi}/auth/${decodedUser.id}`)
-          .then((response) => {
-            if (response.data.success) {
-              const userData = response.data.data;
-              setUser({
-                id: userData._id,
-                name: userData.name,
-                email: userData.email,
-                isVerified: userData.isVerified,
-                phone: userData.phone,
-                profilePhoto: profilePhoto || userData.profilePhoto,
-                role: userData.role,
-              });
-            } else {
-              toast.error("Failed to retrieve user information.");
-            }
-          })
-          .catch((error) => {
-            console.error("Error fetching user data:", error);
-            toast.error("Failed to load user information. Please try again.");
-          });
-      } catch (error) {
-        console.error("Invalid token:", error);
-        toast.error("Failed to decode user information. Please log in again.");
-      }
+      const decodedToken: { id: string } = jwtDecode(token);
+      setUserId(decodedToken.id);
+      localStorage.setItem("userId", decodedToken.id);
     }
-  }, [profilePhoto]);
+  }, []);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!userId) return;
+
+      try {
+        const token = localStorage.getItem("token");
+        setProfilePhoto(localStorage.getItem("profilePhoto"));
+        const response = await axios.get(
+          `${envConfig.baseApi}/auth/${userId}`,
+          {
+            headers: { Authorization: `${token}` },
+          },
+        );
+
+        if (response.data.success) {
+          const userData = response.data.data;
+          setUser({
+            id: userData._id,
+            name: userData.name,
+            email: userData.email,
+            isVerified: userData.isVerified,
+            profilePhoto: profilePhoto || userData.profilePhoto,
+            role: userData.role,
+            phone: userData.phone,
+            followersCount: userData.followersCount,
+            followingCount: userData.followingCount,
+          });
+          setFollowersCount(userData.followersCount);
+          setFollowingCount(userData.followingCount);
+          setProfilePhoto(userData.profilePhoto);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast.error("Failed to load user data.");
+      }
+    };
+
+    fetchUserData();
+  }, [userId, profilePhoto]);
 
   const handleEditProfile = async (updatedData: Partial<User>) => {
     try {
@@ -92,6 +113,9 @@ export default function Profile() {
 
       // Revalidate the posts tag
       await fetch("/api/revalidate?tag=posts");
+      // Revalidate the followers and following tags
+      await fetch("/api/revalidate?tag=followers");
+      await fetch("/api/revalidate?tag=following");
 
       router.refresh(); // Refresh the page to update the newsfeed
     } catch (error) {
@@ -108,6 +132,14 @@ export default function Profile() {
     setUser((prevUser) => ({ ...prevUser!, isVerified: true }));
     setShowVerificationModal(false);
     toast.success("Your account has been verified!");
+  };
+
+  const updateFollowCounts = (
+    followersDelta: number,
+    followingDelta: number,
+  ) => {
+    setFollowersCount((prev) => prev + followersDelta);
+    setFollowingCount((prev) => prev + followingDelta);
   };
 
   if (!user) {
@@ -152,7 +184,7 @@ export default function Profile() {
                   </button>
                 )}
               </div>
-              <p className="text-gray-500">@{user.email.split("@")[0]}</p>
+              <p className="text-gray-500">@{user?.email?.split("@")[0]}</p>
             </div>
           </div>
           <button
@@ -164,12 +196,18 @@ export default function Profile() {
         </div>
 
         <div className="mt-4 flex px-4">
-          <div className="mr-4">
-            <span className="font-bold">100</span>
+          <div
+            className="mr-4 cursor-pointer"
+            onClick={() => setShowFollowersModal(true)}
+          >
+            <span className="font-bold">{followersCount}</span>
             <span className="text-gray-500"> Followers</span>
           </div>
-          <div>
-            <span className="font-bold">50</span>
+          <div
+            className="cursor-pointer"
+            onClick={() => setShowFollowingModal(true)}
+          >
+            <span className="font-bold">{followingCount}</span>
             <span className="text-gray-500"> Following</span>
           </div>
         </div>
@@ -188,6 +226,22 @@ export default function Profile() {
           onClose={() => setShowVerificationModal(false)}
           onSuccess={handleVerificationSuccess}
           userId={user.id}
+        />
+      )}
+
+      {showFollowersModal && (
+        <FollowersModal
+          onClose={() => setShowFollowersModal(false)}
+          userId={user.id}
+          updateFollowCounts={updateFollowCounts}
+        />
+      )}
+
+      {showFollowingModal && (
+        <FollowingModal
+          onClose={() => setShowFollowingModal(false)}
+          userId={user.id}
+          updateFollowCounts={updateFollowCounts}
         />
       )}
 

@@ -6,6 +6,7 @@ import SkeletonLoader from "@/components/SkeletonLoader";
 import FeedPost from "./FeedPost";
 
 interface User {
+  _id: string;
   name: string;
   profilePhoto: string;
   email: string;
@@ -52,6 +53,8 @@ export default function PostList({ initialPosts }: PostListProps) {
                 username: `@${post?.user?.email?.split("@")[0]}`,
                 profilePhoto: post?.user?.profilePhoto,
                 isVerified: post.user.isVerified,
+                isFollowing: false,
+                _id: post.user._id,
               },
               content: post.content,
               images: post.images,

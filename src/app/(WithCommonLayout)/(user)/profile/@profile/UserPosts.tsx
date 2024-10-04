@@ -29,44 +29,30 @@ export default function UserPosts({ userId }: UserPostsProps) {
   const [userInfo, setUserInfo] = useState<any>(null);
 
   useEffect(() => {
-    const fetchUserPosts = async () => {
+    const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) throw new Error("No token found");
-
-        const response = await axios.get(
-          `${envConfig.baseApi}/auth/${userId}`,
-          {
-            headers: {
-              Authorization: `${token}`,
-            },
-          },
-        );
+        const response = await axios.get(`${envConfig.baseApi}/auth/${userId}`, {
+          headers: { Authorization: `${token}` },
+        });
 
         if (response.data.success) {
           const userData = response.data.data;
           setUserInfo(userData);
-          // Sort posts by createdAt in descending order
-          const sortedPosts = (userData.posts || []).sort(
-            (a: Post, b: Post) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          );
-          setPosts(sortedPosts);
-        } else {
-          toast.error("Failed to fetch user posts.");
+          setPosts(userData.posts || []);
         }
       } catch (error) {
-        console.error("Error fetching user posts:", error);
-        toast.error("Failed to load user posts. Please try again.");
+        console.error("Error fetching user data:", error);
+        toast.error("Failed to load user data.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserPosts();
+    fetchUserData();
   }, [userId]);
 
-  if (loading) {
+  if (loading || !userInfo) {
     return <SkeletonLoader />;
   }
 
@@ -79,17 +65,19 @@ export default function UserPosts({ userId }: UserPostsProps) {
             post={{
               ...post,
               user: {
+                _id: userId,
                 profilePhoto: userInfo.profilePhoto,
                 username: `@${userInfo.email.split("@")[0]}`,
                 name: userInfo.name,
                 isVerified: userInfo.isVerified,
+                isFollowing: false
               },
               timestamp: post.createdAt,
             }}
           />
         ))
       ) : (
-        <p className="text-center text-gray-500">No posts available</p>
+        <p className="my-10 text-center text-gray-400">No posts available</p>
       )}
     </div>
   );

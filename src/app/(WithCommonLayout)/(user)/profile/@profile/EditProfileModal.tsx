@@ -70,8 +70,8 @@ export default function EditProfileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-md rounded-lg bg-black bg-opacity-50 p-6 transition-opacity">
-        <h2 className="mb-4 text-2xl font-bold">Edit Profile</h2>
+      <div className="w-full max-w-md rounded-lg bg-base-300 p-6 transition-opacity">
+        <h2 className="mb-4 text-center text-2xl font-bold">Edit Profile</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="mb-2 block font-bold" htmlFor="name">
@@ -117,7 +117,7 @@ export default function EditProfileModal({
               />
               <label
                 htmlFor="profilePhotoInput"
-                className="cursor-pointer rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                className="btn bg-primary px-4 py-2 text-white hover:bg-blue-600"
               >
                 {isUploading ? "Uploading..." : "Change Photo"}
               </label>
@@ -127,13 +127,13 @@ export default function EditProfileModal({
             <button
               type="button"
               onClick={onClose}
-              className="mr-2 rounded bg-gray-300 px-4 py-2 hover:bg-gray-400"
+              className="btn mr-2 bg-gray-700 px-4 py-2 text-white hover:bg-gray-900"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+              className="btn bg-blue-500 px-4 py-1 text-white hover:bg-blue-800"
             >
               Save Changes
             </button>

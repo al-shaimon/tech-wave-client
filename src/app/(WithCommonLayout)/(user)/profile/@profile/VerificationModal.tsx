@@ -99,13 +99,13 @@ const PaymentForm = ({ onSuccess, onClose }: VerificationModalProps) => {
         <button
           type="button"
           onClick={onClose}
-          className="btn mr-2 rounded bg-gray-700 px-4 py-2 text-white hover:bg-gray-900"
+          className="btn mr-2 bg-gray-700 px-4 py-2 text-white hover:bg-gray-900"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="btn rounded bg-primary px-4 py-2 text-white hover:bg-blue-600"
+          className="btn bg-primary px-4 py-2 text-white hover:bg-blue-600"
           disabled={isProcessing || !stripe}
         >
           {isProcessing ? "Processing..." : "Pay $20"}
@@ -123,9 +123,10 @@ export default function VerificationModal({
   return (
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-black bg-opacity-50 transition-opacity">
       <div className="w-full max-w-md rounded-lg bg-base-300 p-6">
-        <h2 className="mb-4 text-2xl font-bold">Get Verified</h2>
+        <h2 className="mb-4 text-center text-2xl font-bold">Get Verified</h2>
         <p className="mb-4">
-          Pay $20 to get a blue verification badge for your account.
+          Pay <span className="font-bold text-primary">$20</span> to get a blue
+          verification badge for your account.
         </p>
         <Elements stripe={stripePromise}>
           <PaymentForm

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import Image from "next/image";
@@ -6,15 +7,21 @@ import VoteButtons from "./VoteButtons";
 import PostLightGallery from "./PostLightGallery";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import htmlParser from "html-react-parser";
+import axios from "axios";
+import { toast } from "sonner";
+import envConfig from "@/config/envConfig";
+import { jwtDecode } from "jwt-decode";
 
 interface User {
+  _id: string;
   profilePhoto: string;
   username: string;
   name: string;
   isVerified: boolean;
+  isFollowing: boolean;
 }
 
 interface Post {
@@ -32,6 +39,41 @@ export default function FeedPost({ post }: { post: Post }) {
   let timeAgo: string;
 
   const [loading, setLoading] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(post.user.isFollowing);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decodedToken: { id: string } = jwtDecode(token);
+      setUserId(decodedToken.id);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchFollowStatus = async () => {
+      if (userId === post.user._id) return;
+
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${envConfig.baseApi}/auth/followers-following/${post.user._id}`,
+          {
+            headers: { Authorization: `${token}` },
+          }
+        );
+
+        if (response.data.success) {
+          setIsFollowing(response.data.data.isFollowing);
+        }
+      } catch (error) {
+        console.error("Error fetching follow status:", error);
+      }
+    };
+
+    fetchFollowStatus();
+  }, [post.user._id, userId]);
 
   try {
     const postDate = new Date(post.timestamp);
@@ -209,7 +251,29 @@ export default function FeedPost({ post }: { post: Post }) {
     }
   };
 
-  console.log("Post data:", post);
+  const handleFollowUnfollow = async () => {
+    if (!userId || userId === post.user._id) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const endpoint = isFollowing ? 'unfollow' : 'follow';
+      const response = await axios.post(
+        `${envConfig.baseApi}/auth/${endpoint}/${post.user._id}`,
+        {},
+        {
+          headers: { Authorization: `${token}` },
+        }
+      );
+
+      if (response.data.success) {
+        setIsFollowing(!isFollowing);
+        toast.success(`Successfully ${endpoint}ed ${post.user.name}`);
+      }
+    } catch (error) {
+      console.error(`Error ${isFollowing ? 'unfollowing' : 'following'} user:`, error);
+      toast.error(`Failed to ${isFollowing ? 'unfollow' : 'follow'} user.`);
+    }
+  };
 
   return (
     <div className="mb-4 rounded-lg bg-base-100 py-4 shadow-md md:w-full md:p-4">
@@ -257,12 +321,31 @@ export default function FeedPost({ post }: { post: Post }) {
                 </div>
                 <ul
                   tabIndex={0}
-                  className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-200 p-2 shadow"
+                  className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-200 p-4 shadow"
                 >
-                  <li>
-                    <a onClick={handleDownload}>
+                  {userId && userId !== post.user._id && (
+                    <li className="my-1">
+                      <button onClick={handleFollowUnfollow}>
+                        <Image
+                          src={isFollowing ? "/remove.svg" : "/add.svg"}
+                          width={16}
+                          height={16}
+                          alt={isFollowing ? "unfollow icon" : "follow icon"}
+                        />
+                        {isFollowing ? `Unfollow ${post.user.name}` : `Follow ${post.user.name}`}
+                      </button>
+                    </li>
+                  )}
+                  <li className="my-1">
+                    <button onClick={handleDownload}>
+                      <Image
+                        src="/download.svg"
+                        width={16}
+                        height={16}
+                        alt="download icon"
+                      />
                       {loading ? "Generating PDF..." : "Download as PDF"}
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </div>
