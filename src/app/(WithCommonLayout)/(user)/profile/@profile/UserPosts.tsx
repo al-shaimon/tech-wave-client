@@ -32,9 +32,12 @@ export default function UserPosts({ userId }: UserPostsProps) {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`${envConfig.baseApi}/auth/${userId}`, {
-          headers: { Authorization: `${token}` },
-        });
+        const response = await axios.get(
+          `${envConfig.baseApi}/auth/${userId}`,
+          {
+            headers: { Authorization: `${token}` },
+          },
+        );
 
         if (response.data.success) {
           const userData = response.data.data;
@@ -70,9 +73,10 @@ export default function UserPosts({ userId }: UserPostsProps) {
                 username: `@${userInfo.email.split("@")[0]}`,
                 name: userInfo.name,
                 isVerified: userInfo.isVerified,
-                isFollowing: false
+                isFollowing: false,
               },
               timestamp: post.createdAt,
+              comments: post.comments || 0,
             }}
           />
         ))

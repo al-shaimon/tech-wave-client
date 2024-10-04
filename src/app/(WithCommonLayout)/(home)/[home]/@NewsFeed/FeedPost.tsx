@@ -14,6 +14,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
 import { jwtDecode } from "jwt-decode";
+import { useRouter } from "next/navigation";
 
 interface User {
   _id: string;
@@ -26,13 +27,22 @@ interface User {
 
 interface Post {
   _id: string;
-  user: User;
-  timestamp: string;
+  user: {
+    _id: string;
+    profilePhoto: string;
+    username?: string;
+    email?: string;
+    name: string;
+    isVerified: boolean;
+    isFollowing: boolean;
+  };
+  timestamp?: string; // Keep this for newsfeed
+  createdAt?: string; // Add this for post details
   content: string;
   images: string[];
   videos: string[];
   votes: number;
-  comments: number;
+  comments: number | Array<{ user: { name: string }, content: string }>;
 }
 
 export default function FeedPost({ post }: { post: Post }) {
@@ -42,6 +52,7 @@ export default function FeedPost({ post }: { post: Post }) {
   const [forceUpdate, setForceUpdate] = useState(false);
   const [isFollowing, setIsFollowing] = useState(post.user.isFollowing);
   const [userId, setUserId] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -61,7 +72,7 @@ export default function FeedPost({ post }: { post: Post }) {
           `${envConfig.baseApi}/auth/followers-following/${post.user._id}`,
           {
             headers: { Authorization: `${token}` },
-          }
+          },
         );
 
         if (response.data.success) {
@@ -76,37 +87,34 @@ export default function FeedPost({ post }: { post: Post }) {
   }, [post.user._id, userId]);
 
   try {
-    const postDate = new Date(post.timestamp);
+    const postDate = new Date(post.timestamp || post.createdAt || '');
+
+    if (isNaN(postDate.getTime())) {
+      throw new Error("Invalid date");
+    }
+
     const now = new Date();
     const timeDifferenceInMs = now.getTime() - postDate.getTime();
     const timeDifferenceInHours = timeDifferenceInMs / (1000 * 60 * 60);
     const timeDifferenceInDays = timeDifferenceInHours / 24;
     const timeDifferenceInMonths = timeDifferenceInDays / 30;
 
-    if (isNaN(postDate.getTime())) {
-      throw new Error("Invalid date");
-    }
-
     if (timeDifferenceInHours < 24) {
-      if (timeDifferenceInHours < 1) {
-        const timeDifferenceInMinutes = Math.floor(
-          timeDifferenceInMs / (1000 * 60),
-        );
-        timeAgo = `${timeDifferenceInMinutes} min. ago`;
-      } else {
-        timeAgo = `${Math.floor(timeDifferenceInHours)} hr. ago`;
-      }
+      timeAgo = `${Math.round(timeDifferenceInHours)}h`;
     } else if (timeDifferenceInDays < 30) {
-      timeAgo = `${Math.floor(timeDifferenceInDays)} days ago`;
+      timeAgo = `${Math.round(timeDifferenceInDays)}d`;
     } else if (timeDifferenceInMonths < 12) {
-      timeAgo = `${Math.floor(timeDifferenceInMonths)} month${timeDifferenceInMonths > 2 ? "s" : ""} ago`;
+      timeAgo = `${Math.round(timeDifferenceInMonths)}mo`;
     } else {
       timeAgo = format(postDate, "MMM d, yyyy");
     }
   } catch (error) {
-    console.error("Error parsing timestamp:", error);
+    console.error("Error parsing date:", error, "Date value:", post.timestamp || post.createdAt);
     timeAgo = "Invalid date";
   }
+
+
+  const username = `@${post.user.email?.split("@")[0] || "unknown"}`;
 
   // Helper function to convert an image URL to a Base64 data URL
   const convertImageToBase64 = (url: string): Promise<string> => {
@@ -133,11 +141,8 @@ export default function FeedPost({ post }: { post: Post }) {
     setLoading(true);
 
     try {
-      // Format the post date
-      const postDate = new Date(post.timestamp);
-      const formattedDate = format(postDate, "dd-MMMM-yyyy"); // e.g., 20-March-2024
-
-      // Generate the dynamic filename
+      const postDate = new Date(post.createdAt || '');
+      const formattedDate = format(postDate, "dd-MMMM-yyyy");
       const fileName = `${post.user.name}'s post ${formattedDate}.pdf`;
 
       const doc = new jsPDF();
@@ -146,7 +151,7 @@ export default function FeedPost({ post }: { post: Post }) {
       doc.setFontSize(20);
       doc.text(`${post.user.name}'s Post`, 10, 20);
 
-      // Parse and render the post content from HTML
+      // Add post content
       let yPosition = 30;
       htmlParser(post.content, {
         replace: (domNode) => {
@@ -203,10 +208,7 @@ export default function FeedPost({ post }: { post: Post }) {
         },
       });
 
-      // Adjust the position for images
-      yPosition += 10;
-
-      // Add images (if any)
+      // Add images
       if (post.images && post.images.length > 0) {
         for (const image of post.images) {
           // Convert the image to base64 before adding it to the PDF
@@ -223,14 +225,7 @@ export default function FeedPost({ post }: { post: Post }) {
         }
       }
 
-      // Check if we are near the bottom of the page and add a new page if necessary
-      if (yPosition > 260) {
-        // if there's no space for video links
-        doc.addPage();
-        yPosition = 20; // reset the position on the new page
-      }
-
-      // Add videos as links (if any)
+      // Add videos as links
       if (post.videos && post.videos.length > 0) {
         doc.setFontSize(12);
         doc.setTextColor(0, 0, 255); // Make the link blue for better visibility
@@ -242,11 +237,31 @@ export default function FeedPost({ post }: { post: Post }) {
         });
       }
 
+      // Add comments
+      if (Array.isArray(post.comments) && post.comments.length > 0) {
+        doc.addPage();
+        yPosition = 20;
+        doc.setFontSize(16);
+        doc.text("Comments", 10, yPosition);
+        yPosition += 10;
+
+        post.comments.forEach((comment, index) => {
+          doc.setFontSize(12);
+          doc.text(`${comment.user.name}: ${comment.content}`, 10, yPosition);
+          yPosition += 10;
+
+          if (yPosition > 280) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      }
+
       // Save the PDF
       doc.save(fileName);
-      setLoading(false);
     } catch (error) {
       console.error("Error generating or downloading PDF:", error);
+    } finally {
       setLoading(false);
     }
   };
@@ -256,13 +271,13 @@ export default function FeedPost({ post }: { post: Post }) {
 
     try {
       const token = localStorage.getItem("token");
-      const endpoint = isFollowing ? 'unfollow' : 'follow';
+      const endpoint = isFollowing ? "unfollow" : "follow";
       const response = await axios.post(
         `${envConfig.baseApi}/auth/${endpoint}/${post.user._id}`,
         {},
         {
           headers: { Authorization: `${token}` },
-        }
+        },
       );
 
       if (response.data.success) {
@@ -270,10 +285,17 @@ export default function FeedPost({ post }: { post: Post }) {
         toast.success(`Successfully ${endpoint}ed ${post.user.name}`);
       }
     } catch (error) {
-      console.error(`Error ${isFollowing ? 'unfollowing' : 'following'} user:`, error);
-      toast.error(`Failed to ${isFollowing ? 'unfollow' : 'follow'} user.`);
+      console.error(
+        `Error ${isFollowing ? "unfollowing" : "following"} user:`,
+        error,
+      );
+      toast.error(`Failed to ${isFollowing ? "unfollow" : "follow"} user.`);
     }
   };
+
+  // const handleCommentClick = () => {
+  //   router.push(`/post/${post._id}`);
+  // };
 
   return (
     <div className="mb-4 rounded-lg bg-base-100 py-4 shadow-md md:w-full md:p-4">
@@ -281,7 +303,7 @@ export default function FeedPost({ post }: { post: Post }) {
         <Image
           className="rounded-full"
           src={post.user.profilePhoto || "/default-profile-photo.jpg"}
-          alt={post.user.username}
+          alt={post.user.username || "default-username"}
           width={48}
           height={48}
         />
@@ -300,7 +322,7 @@ export default function FeedPost({ post }: { post: Post }) {
               ) : (
                 <span className="mx-[5px]"></span>
               )}
-              <span className="text-gray-500">{post.user.username}</span>
+              <span className="text-gray-500">{username}</span>
               <span className="ml-3 text-gray-500">•</span>
               <span className="ml-3 text-gray-500">{timeAgo}</span>
             </div>
@@ -332,7 +354,9 @@ export default function FeedPost({ post }: { post: Post }) {
                           height={16}
                           alt={isFollowing ? "unfollow icon" : "follow icon"}
                         />
-                        {isFollowing ? `Unfollow ${post.user.name}` : `Follow ${post.user.name}`}
+                        {isFollowing
+                          ? `Unfollow ${post.user.name}`
+                          : `Follow ${post.user.name}`}
                       </button>
                     </li>
                   )}
@@ -382,7 +406,7 @@ export default function FeedPost({ post }: { post: Post }) {
             <VoteButtons
               postId={post._id}
               initialVotes={post.votes}
-              commentsCount={post.comments}
+              commentsCount={typeof post.comments === 'number' ? post.comments : post.comments.length}
             />
           </div>
         </div>

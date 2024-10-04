@@ -24,6 +24,8 @@ export default function VoteButtons({
   const [hoverDownVote, setHoverDownVote] = useState(false);
   const router = useRouter();
 
+  console.log("COMMENTS COUNT FROM VARIOUS PAGE", commentsCount);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -114,8 +116,8 @@ export default function VoteButtons({
 
   const handleCommentClick = () => {
     if (!requireLogin()) return;
-    // Redirect to the comment section or open the comment modal
-    console.log("Comment button clicked");
+
+    router.push(`/post/${postId}`);
   };
 
   const handleShareClick = () => {

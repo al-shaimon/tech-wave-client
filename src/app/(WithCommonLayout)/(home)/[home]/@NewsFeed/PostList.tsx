@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
+import axios from "axios";
+import envConfig from "@/config/envConfig";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import FeedPost from "./FeedPost";
 
@@ -11,6 +12,7 @@ interface User {
   profilePhoto: string;
   email: string;
   isVerified: boolean;
+  isFollowing: boolean;
 }
 
 interface PostData {
@@ -22,6 +24,7 @@ interface PostData {
   createdAt: string;
   votes: number;
   comments: { length: number };
+  commentCount: number;
 }
 
 interface PostListProps {
@@ -29,11 +32,31 @@ interface PostListProps {
 }
 
 export default function PostList({ initialPosts }: PostListProps) {
-  const [postsData] = useState<PostData[]>(initialPosts);
+  const [postsData, setPostsData] = useState<PostData[]>(initialPosts);
   const [loading, setLoading] = useState(false);
 
+  const fetchNewPosts = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${envConfig.baseApi}/posts`);
+      if (response.data.success) {
+        const newPosts = response.data.data;
+        setPostsData(prevPosts => {
+          const existingPostIds = new Set(prevPosts.map(post => post._id));
+          const uniqueNewPosts = newPosts.filter((post: PostData) => !existingPostIds.has(post._id));
+          return [...uniqueNewPosts, ...prevPosts];
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching new posts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    setLoading(false);
+    const interval = setInterval(fetchNewPosts, 30000); // Fetch new posts every 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -61,7 +84,7 @@ export default function PostList({ initialPosts }: PostListProps) {
               videos: post.videos,
               timestamp: post.createdAt,
               votes: post.votes,
-              comments: post.comments.length,
+              comments: post.comments.length || post.commentCount || 0,
             }}
           />
         ))
