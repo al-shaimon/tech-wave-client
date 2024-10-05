@@ -476,7 +476,7 @@ export default function FeedPost({ post }: { post: Post }) {
 
               <div className="markdown-content">
                 <ReactMarkdown
-                  className="prose-sm text-white md:prose-lg prose-h1:text-2xl prose-h2:text-xl prose-p:text-sm md:prose-h1:text-4xl md:prose-h2:text-3xl md:prose-p:text-[15px]"
+                  className="prose-sm text-white md:prose-lg prose-h1:text-2xl prose-h2:text-xl prose-p:text-sm md:prose-h1:text-3xl md:prose-h2:text-2xl md:prose-p:text-[15px]"
                   rehypePlugins={[rehypeRaw]}
                 >
                   {post.content}

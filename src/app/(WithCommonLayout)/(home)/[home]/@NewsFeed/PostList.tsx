@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
-import envConfig from "@/config/envConfig";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import FeedPost from "./FeedPost";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 interface User {
   _id: string;
@@ -35,40 +35,45 @@ interface PostListProps {
 
 export default function PostList({ initialPosts }: PostListProps) {
   const [postsData, setPostsData] = useState<PostData[]>(initialPosts);
-  const [loading, setLoading] = useState(false);
+  const [visiblePosts, setVisiblePosts] = useState<PostData[]>(
+    initialPosts.slice(0, 50),
+  ); // First 10 posts visible initially
+  const [hasMore, setHasMore] = useState(true); // Infinite scroll flag
+  const [loading, setLoading] = useState(false); // Loading state
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const fetchNewPosts = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${envConfig.baseApi}/posts`);
-      if (response.data.success) {
-        const newPosts = response.data.data;
-        setPostsData((prevPosts) => {
-          const existingPostIds = new Set(prevPosts.map((post) => post._id));
-          const uniqueNewPosts = newPosts.filter(
-            (post: PostData) => !existingPostIds.has(post._id),
-          );
-          return [...uniqueNewPosts, ...prevPosts];
-        });
-      }
-      
-    } catch (error) {
-      console.error("Error fetching new posts:", error);
-    } finally {
-      setLoading(false);
-    }
+  // Function to shuffle the posts array
+  const shuffleArray = (array: PostData[]) => {
+    return array.sort(() => Math.random() - 0.5);
   };
 
+  const fetchMorePosts = () => {
+    setLoading(true);
+
+    const shuffledPosts = shuffleArray(postsData);
+
+    setVisiblePosts((prevPosts) => [
+      ...prevPosts,
+      ...shuffledPosts.slice(0, 10),
+    ]);
+
+    setLoading(false);
+  };
 
   return (
-    <div>
-      {/* Show skeleton loader while loading */}
-      {loading && <SkeletonLoader />}
-
-      {/* Render the fetched posts */}
-      {postsData.length > 0 ? (
-        postsData.map((post) => (
+    <InfiniteScroll
+      dataLength={visiblePosts.length}
+      next={fetchMorePosts}
+      hasMore={hasMore}
+      loader={<SkeletonLoader />}
+      endMessage={
+        <p className="my-10 flex items-center justify-center">
+          No more posts available
+        </p>
+      }
+    >
+      {/* Render the visible posts */}
+      {visiblePosts.length > 0 ? (
+        visiblePosts.map((post) => (
           <FeedPost
             key={post._id}
             post={{
@@ -97,6 +102,6 @@ export default function PostList({ initialPosts }: PostListProps) {
           No posts available
         </p>
       )}
-    </div>
+    </InfiniteScroll>
   );
 }
