@@ -15,7 +15,9 @@ interface ExtendedJwtPayload extends JwtPayload {
 export default function Navbar() {
   const [user, setUser] = useState<ExtendedJwtPayload | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
+
   useEffect(() => {
     // Safely access localStorage on the client side
     const token = localStorage.getItem("token");
@@ -35,25 +37,54 @@ export default function Navbar() {
     router.push("/"); // Navigate to the home page
     // Revalidate the posts tag
     await fetch("/api/revalidate?tag=posts");
+  };
 
-    // router.refresh(); // Refresh the page to update the
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   return (
     <div className="navbar my-2 border-b border-grey">
       <div className="navbar-start">
-        <div className="md:hidden">
-          <Image src="/l3.png" width={100} height={26} alt="TechWave" />
+        <div className="dropdown">
+          <label tabIndex={0} className="btn btn-ghost" onClick={toggleMenu}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h8m-8 6h16"
+              />
+            </svg>
+          </label>
+          {isMenuOpen && (
+            <ul
+              tabIndex={0}
+              className="menu dropdown-content menu-sm z-[999] mt-3 w-52 rounded-box bg-base-100 p-2 shadow"
+            >
+              <li>
+                <Link href="/about">About Us</Link>
+              </li>
+              <li>
+                <Link href="/contact">Contact Us</Link>
+              </li>
+            </ul>
+          )}
         </div>
-
-        <div className="hidden md:block">
-          <button onClick={handleHome}>
-            <Image src="/l3.png" width={150} height={50} alt="TechWave" />
-          </button>
-        </div>
+        <button onClick={handleHome} className="lg:hidden">
+          <Image src="/l.png" width={150} height={50} alt="TechWave" />
+        </button>
+        <button onClick={handleHome} className="hidden lg:block">
+          <Image src="/l3.png" width={150} height={50} alt="TechWave" />
+        </button>
       </div>
 
-      {/* Search Input Fields */}
       <div className="navbar-center">
         <div className="form-control ml-2 w-40 md:w-[300px] lg:w-[560px]">
           <input
