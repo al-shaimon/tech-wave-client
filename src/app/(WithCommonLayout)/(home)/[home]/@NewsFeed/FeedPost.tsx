@@ -151,7 +151,6 @@ export default function FeedPost({ post }: { post: Post }) {
     timeAgo = "Invalid date";
   }
 
-
   const username2 = `@${post.user.email?.split("@")[0] || "unknown"}`;
   const username = `${post.user.username || username2}`;
 
@@ -366,6 +365,7 @@ export default function FeedPost({ post }: { post: Post }) {
         );
 
         setIsUserVerified(response.data.data.isVerified);
+        localStorage.setItem("isVerified", true.toString());
         // Revalidate the posts tag
         await fetch("/api/revalidate?tag=posts");
 
