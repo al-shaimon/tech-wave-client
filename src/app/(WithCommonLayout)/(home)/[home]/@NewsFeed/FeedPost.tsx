@@ -15,6 +15,9 @@ import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
+import PaymentModal from "@/components/PaymentModal";
+import React from "react";
+import SkeletonLoader from "@/components/SkeletonLoader";
 
 interface User {
   _id: string;
@@ -43,6 +46,8 @@ interface Post {
   videos: string[];
   votes: number;
   comments: number | Array<{ user: { name: string }; content: string }>;
+  isPaid: boolean;
+  category: string;
 }
 
 export default function FeedPost({ post }: { post: Post }) {
@@ -53,19 +58,34 @@ export default function FeedPost({ post }: { post: Post }) {
   const [isFollowing, setIsFollowing] = useState(post.user.isFollowing);
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
+  const [isUnlocked, setIsUnlocked] = useState(!post.isPaid);
+  const [isVerified, setIsVerified] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isUserVerified, setIsUserVerified] = useState(false);
+  const [isPostOwner, setIsPostOwner] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const isVerified = localStorage.getItem("isVerified") === "true";
+
     if (token) {
       const decodedToken: { id: string } = jwtDecode(token);
       setUserId(decodedToken.id);
+      setIsPostOwner(decodedToken.id === post.user._id);
+      setIsUserVerified(isVerified);
     }
-  }, []);
+    setIsLoading(false);
+  }, [post.user._id]);
 
   useEffect(() => {
     const fetchFollowStatus = async () => {
-      if (userId === post.user._id) return;
+      if (userId === post.user._id) {
+        setIsLoading(false);
+        return;
+      }
 
+      setIsLoading(true);
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
@@ -78,20 +98,27 @@ export default function FeedPost({ post }: { post: Post }) {
         if (response.data.success) {
           setIsFollowing(response.data.data.isFollowing);
         }
+
+        const data = await axios.get(`${envConfig.baseApi}/auth/${userId}`, {
+          headers: { Authorization: `${token}` },
+        });
+        setIsUserVerified(data.data.data.isVerified);
+        // Revalidate the posts tag
+        await fetch("/api/revalidate?tag=posts");
+
+        router.refresh(); // Refresh the page to update the newsfeed
       } catch (error) {
         console.error("Error fetching follow status:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchFollowStatus();
-  }, [post.user._id, userId]);
+  }, [post.user._id, router, userId]);
 
   try {
     const postDate = new Date(post.timestamp || post.createdAt || "");
-
-    if (isNaN(postDate.getTime())) {
-      throw new Error("Invalid date");
-    }
 
     const now = new Date();
     const timeDifferenceInMs = now.getTime() - postDate.getTime();
@@ -99,31 +126,34 @@ export default function FeedPost({ post }: { post: Post }) {
     const timeDifferenceInDays = timeDifferenceInHours / 24;
     const timeDifferenceInMonths = timeDifferenceInDays / 30;
 
+    if (isNaN(postDate.getTime())) {
+      throw new Error("Invalid date");
+    }
+
     if (timeDifferenceInHours < 24) {
-      timeAgo = `${Math.round(timeDifferenceInHours)}h`;
+      if (timeDifferenceInHours < 1) {
+        const timeDifferenceInMinutes = Math.floor(
+          timeDifferenceInMs / (1000 * 60),
+        );
+        timeAgo = `${timeDifferenceInMinutes}m`;
+      } else {
+        timeAgo = `${Math.floor(timeDifferenceInHours)}h`;
+      }
     } else if (timeDifferenceInDays < 30) {
-      timeAgo = `${Math.round(timeDifferenceInDays)}d`;
+      timeAgo = `${Math.floor(timeDifferenceInDays)}d`;
     } else if (timeDifferenceInMonths < 12) {
-      timeAgo = `${Math.round(timeDifferenceInMonths)}mo`;
+      timeAgo = `${Math.floor(timeDifferenceInMonths)}mon`;
     } else {
       timeAgo = format(postDate, "MMM d, yyyy");
     }
   } catch (error) {
-    console.error(
-      "Error parsing date:",
-      error,
-      "Date value:",
-      post.timestamp || post.createdAt,
-    );
+    console.error("Error parsing timestamp:", error);
     timeAgo = "Invalid date";
   }
 
+
   const username2 = `@${post.user.email?.split("@")[0] || "unknown"}`;
   const username = `${post.user.username || username2}`;
-
-  console.log("USER NAME", post.user);
-
-  console.log("Post data:", post);
 
   // Helper function to convert an image URL to a Base64 data URL
   const convertImageToBase64 = (url: string): Promise<string> => {
@@ -151,7 +181,7 @@ export default function FeedPost({ post }: { post: Post }) {
 
     try {
       const postDate = new Date(post.createdAt || "");
-      const formattedDate = format(postDate, "dd-MMMM-yyyy");
+      const formattedDate = format(postDate, "dd-MMMM-yyyyy");
       const fileName = `${post.user.name}'s post ${formattedDate}.pdf`;
 
       const doc = new jsPDF();
@@ -302,128 +332,194 @@ export default function FeedPost({ post }: { post: Post }) {
     }
   };
 
-  // const handleCommentClick = () => {
-  //   router.push(`/post/${post._id}`);
-  // };
+  const handleUnlock = () => {
+    if (localStorage.getItem("token") === null) {
+      toast.error("Please login to unlock this post.");
+      return router.push("/login");
+    }
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentSuccess = async () => {
+    setIsPaymentModalOpen(false);
+    setIsUserVerified(true);
+    setIsUnlocked(true);
+    toast.success(
+      "Payment successful! You are now verified and can view all paid posts.",
+    );
+    // Update user's verification status on the server
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decodedToken: { id: string } = jwtDecode(token);
+        setUserId(decodedToken.id);
+        setIsPostOwner(decodedToken.id === post.user._id);
+
+        const response = await axios.post(
+          `${envConfig.baseApi}/auth/update-profile`,
+          { isVerified: true },
+          {
+            headers: {
+              Authorization: `${token}`,
+            },
+          },
+        );
+
+        setIsUserVerified(response.data.data.isVerified);
+        // Revalidate the posts tag
+        await fetch("/api/revalidate?tag=posts");
+
+        router.refresh(); // Refresh the page to update the newsfeed
+        window.location.reload();
+      } catch (error) {
+        console.error("Error checking user status:", error);
+      }
+    }
+  };
 
   return (
-    <div className="mb-4 rounded-lg border-grey bg-base-100 py-4 shadow-2xl md:w-full md:border md:p-4">
-      <div className="flex items-start">
-        <Image
-          className="h-8 w-8 rounded-full md:h-12 md:w-12"
-          src={post.user.profilePhoto || "/default-profile-photo.jpg"}
-          alt={post.user.username || "default-username"}
-          width={48}
-          height={48}
-        />
-        <div className="ml-2 w-full text-sm md:ml-4 md:text-base">
-          <div className="flex justify-between">
-            <div className="flex items-center">
-              <span className="font-bold">{post.user.name}</span>{" "}
-              {post.user.isVerified === true ? (
-                <Image
-                  className="ml-[3px] mr-[5px]"
-                  src="/verified.svg"
-                  alt="Verified"
-                  width={20}
-                  height={20}
-                />
-              ) : (
-                <span className="mx-[5px]"></span>
-              )}
-              <span className="text-gray-500">{username}</span>
-              <span className="ml-3 text-gray-500">•</span>
-              <span className="ml-3 text-gray-500">{timeAgo}</span>
-            </div>
-            <div className="flex items-center justify-center">
-              <div className="dropdown dropdown-end">
-                <div tabIndex={0} role="button" className="">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle cx="5" cy="12" r="2" fill="currentColor" />
-                    <circle cx="12" cy="12" r="2" fill="currentColor" />
-                    <circle cx="19" cy="12" r="2" fill="currentColor" />
-                  </svg>
-                </div>
-                <ul
-                  tabIndex={0}
-                  className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-200 p-4 shadow"
-                >
-                  {userId && userId !== post.user._id && (
-                    <li className="my-1">
-                      <button onClick={handleFollowUnfollow}>
-                        <Image
-                          src={isFollowing ? "/remove.svg" : "/add.svg"}
-                          width={16}
-                          height={16}
-                          alt={isFollowing ? "unfollow icon" : "follow icon"}
-                        />
-                        {isFollowing
-                          ? `Unfollow ${post.user.name}`
-                          : `Follow ${post.user.name}`}
-                      </button>
-                    </li>
+    <>
+      <div className="relative mb-4 rounded-lg border-grey bg-base-100 py-4 shadow-2xl md:w-full md:border md:p-4">
+        {post.isPaid && !isUserVerified && !isPostOwner && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg backdrop-blur-md">
+            <button onClick={handleUnlock} className="btn btn-primary">
+              Pay $20 to Unlock All Premium Posts
+            </button>
+          </div>
+        )}
+        <div
+          className={
+            post.isPaid && !isUserVerified && !isPostOwner
+              ? "blur-sm filter"
+              : ""
+          }
+        >
+          {/* Existing post content */}
+          <div className="flex items-start">
+            <Image
+              className="h-8 w-8 rounded-full md:h-12 md:w-12"
+              src={post.user.profilePhoto || "/default-profile-photo.jpg"}
+              alt={post.user.username || "default-username"}
+              width={48}
+              height={48}
+            />
+            <div className="ml-2 w-full text-sm md:ml-4 md:text-base">
+              <div className="flex justify-between">
+                <div className="flex items-center">
+                  <span className="font-bold">{post.user.name}</span>{" "}
+                  {post.user.isVerified === true ? (
+                    <Image
+                      className="ml-[3px] mr-[5px]"
+                      src="/verified.svg"
+                      alt="Verified"
+                      width={20}
+                      height={20}
+                    />
+                  ) : (
+                    <span className="mx-[5px]"></span>
                   )}
-                  <li className="my-1">
-                    <button onClick={handleDownload}>
-                      <Image
-                        src="/download.svg"
-                        width={16}
-                        height={16}
-                        alt="download icon"
-                      />
-                      {loading ? "Generating PDF..." : "Download as PDF"}
-                    </button>
-                  </li>
-                </ul>
+                  <span className="text-gray-500">{username}</span>
+                  <span className="ml-3 text-gray-500">•</span>
+                  <span className="ml-3 text-gray-500">{timeAgo}</span>
+                </div>
+                <div className="flex items-center justify-center">
+                  <div className="dropdown dropdown-end">
+                    <div tabIndex={0} role="button" className="">
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <circle cx="5" cy="12" r="2" fill="currentColor" />
+                        <circle cx="12" cy="12" r="2" fill="currentColor" />
+                        <circle cx="19" cy="12" r="2" fill="currentColor" />
+                      </svg>
+                    </div>
+                    <ul
+                      tabIndex={0}
+                      className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-200 p-4 shadow"
+                    >
+                      {userId && userId !== post.user._id && (
+                        <li className="my-1">
+                          <button onClick={handleFollowUnfollow}>
+                            <Image
+                              src={isFollowing ? "/remove.svg" : "/add.svg"}
+                              width={16}
+                              height={16}
+                              alt={
+                                isFollowing ? "unfollow icon" : "follow icon"
+                              }
+                            />
+                            {isFollowing
+                              ? `Unfollow ${post.user.name}`
+                              : `Follow ${post.user.name}`}
+                          </button>
+                        </li>
+                      )}
+                      <li className="my-1">
+                        <button onClick={handleDownload}>
+                          <Image
+                            src="/download.svg"
+                            width={16}
+                            height={16}
+                            alt="download icon"
+                          />
+                          {loading ? "Generating PDF..." : "Download as PDF"}
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="markdown-content">
+                <ReactMarkdown
+                  className="prose-sm text-white md:prose-lg prose-h1:text-2xl prose-h2:text-xl prose-p:text-sm md:prose-h1:text-4xl md:prose-h2:text-3xl md:prose-p:text-[15px]"
+                  rehypePlugins={[rehypeRaw]}
+                >
+                  {post.content}
+                </ReactMarkdown>
+              </div>
+
+              {post.images && post.images.length > 0 && (
+                <div>
+                  <PostLightGallery images={post.images} />
+                </div>
+              )}
+
+              {post.videos && post.videos.length > 0 && (
+                <div className="mt-2">
+                  {post.videos.map((video, index) => (
+                    <video key={index} controls className="w-full rounded-md">
+                      <source src={video} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-2 flex items-center text-gray-500">
+                <VoteButtons
+                  postId={post._id}
+                  initialVotes={post.votes}
+                  commentsCount={
+                    typeof post.comments === "number"
+                      ? post.comments
+                      : post.comments.length
+                  }
+                />
               </div>
             </div>
           </div>
-
-          <div className="markdown-content">
-            <ReactMarkdown
-              className="prose-sm text-white md:prose-lg prose-h1:text-2xl prose-h2:text-xl prose-p:text-sm md:prose-h1:text-4xl md:prose-h2:text-3xl md:prose-p:text-[15px]"
-              rehypePlugins={[rehypeRaw]}
-            >
-              {post.content}
-            </ReactMarkdown>
-          </div>
-
-          {post.images && post.images.length > 0 && (
-            <div>
-              <PostLightGallery images={post.images} />
-            </div>
-          )}
-
-          {post.videos && post.videos.length > 0 && (
-            <div className="mt-2">
-              {post.videos.map((video, index) => (
-                <video key={index} controls className="w-full rounded-md">
-                  <source src={video} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-2 flex items-center text-gray-500">
-            <VoteButtons
-              postId={post._id}
-              initialVotes={post.votes}
-              commentsCount={
-                typeof post.comments === "number"
-                  ? post.comments
-                  : post.comments.length
-              }
-            />
-          </div>
         </div>
       </div>
-    </div>
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onSuccess={handlePaymentSuccess}
+      />
+    </>
   );
 }

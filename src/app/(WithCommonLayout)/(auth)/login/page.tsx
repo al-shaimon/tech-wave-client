@@ -9,6 +9,7 @@ import envConfig from "@/config/envConfig";
 import Image from "next/image";
 import Link from "next/link";
 import { jwtDecode, JwtPayload } from "jwt-decode";
+import { useRouter } from "next/navigation";
 
 interface CustomJwtPayload extends JwtPayload {
   profilePhoto?: string;
@@ -20,9 +21,10 @@ interface LoginFormInput {
 }
 
 export default function LoginPage() {
-  const [errorMessage, setErrorMessage] = useState(""); // Error message state
-  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const loginForm = useForm<LoginFormInput>();
+  const router = useRouter();
 
   const setTokenInCookies = async (token: string) => {
     try {
@@ -53,14 +55,19 @@ export default function LoginPage() {
       const decodedUser = jwtDecode<CustomJwtPayload>(token);
       await setTokenInCookies(token);
       toast.success("Login successful!");
-      
+
       // Store profilePhoto in localStorage (if it exists)
       if (decodedUser.profilePhoto) {
         localStorage.setItem("profilePhoto", decodedUser.profilePhoto);
       }
 
+      // Store isVerified in localStorage
+      localStorage.setItem("isVerified", decodedUser.isVerified);
+
       // Redirect to home or desired page
-      window.location.href = "/";
+      // window.location.href = "/";
+      router.push("/");
+      router.refresh();
     } catch (error: any) {
       console.error("Login failed", error);
       setErrorMessage(

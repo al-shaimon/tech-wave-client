@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -29,6 +30,8 @@ interface PostData {
   content: string;
   images: string[];
   videos: string[];
+  category: string;
+  isPaid: boolean;
 }
 
 interface Category {
@@ -39,7 +42,7 @@ interface Category {
 export default function CreatePost() {
   const [user, setUser] = useState<User | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [profilePhoto, setProfilePhoto] = useState<any | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [previewMedia, setPreviewMedia] = useState<
     Array<{ type: "image" | "video"; url: string }>
   >([]);
@@ -48,13 +51,18 @@ export default function CreatePost() {
   const quillRef = useRef<any>(null);
   const router = useRouter();
 
-  const { control, handleSubmit, reset } = useForm<PostData>({
+  const { control, handleSubmit, reset, watch } = useForm<PostData>({
     defaultValues: {
       content: "",
       images: [],
       videos: [],
+      category: "",
+      isPaid: false,
     },
   });
+
+  const selectedCategory = watch("category");
+  const isPaid = watch("isPaid");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -71,7 +79,6 @@ export default function CreatePost() {
       }
     }
 
-    // Fetch categories
     fetchCategories();
   }, []);
 
@@ -98,9 +105,7 @@ export default function CreatePost() {
       const response = await axios.post(
         `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`,
         formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
       return response.data.secure_url;
     } catch (error) {
@@ -116,8 +121,8 @@ export default function CreatePost() {
       return;
     }
 
-    if (categories.length === 0) {
-      toast.error("No categories available. Please try again later.");
+    if (!data.category) {
+      toast.error("Please select a category for your post.");
       return;
     }
 
@@ -145,16 +150,13 @@ export default function CreatePost() {
         content: data.content,
         images: uploadedImages,
         videos: uploadedVideos,
-        category: categories[0]._id, // Use the first category
+        category: data.category,
+        isPaid: data.isPaid,
         user: user.id,
       };
 
-      console.log("Creating post:", newPost);
-
       const response = await axios.post(`${envConfig.baseApi}/posts`, newPost, {
-        headers: {
-          Authorization: `${token}`,
-        },
+        headers: { Authorization: `${token}` },
       });
 
       console.log("New post created:", response.data);
@@ -164,10 +166,9 @@ export default function CreatePost() {
       setPreviewMedia([]);
       setLocalFiles([]);
 
-      // Revalidate the posts tag
-      await fetch("/api/revalidate?tag=posts");
-
-      router.refresh(); // Refresh the page to update the newsfeed
+      fetch("/api/revalidate?tag=posts");
+      window.location.href = "/";
+      router.refresh();
     } catch (error: any) {
       console.error("Error creating post:", error);
       toast.error(error.response?.data?.message || "Failed to create post");
@@ -228,7 +229,6 @@ export default function CreatePost() {
   };
 
   useEffect(() => {
-    // Focus the Quill editor when the component mounts
     focusQuill();
   }, []);
 
@@ -242,7 +242,7 @@ export default function CreatePost() {
 
   return (
     <div className="my-2 p-4 text-white">
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="flex items-start">
           {user && (
             <div className="mr-4">
@@ -255,7 +255,7 @@ export default function CreatePost() {
               />
             </div>
           )}
-          <div className="w-32 flex-1 md:w-96">
+          <div className="w-full">
             <div className="quill-wrapper" onClick={focusQuill}>
               <Controller
                 name="content"
@@ -263,7 +263,6 @@ export default function CreatePost() {
                 render={({ field }) => (
                   <ReactQuill
                     {...field}
-                    // ref={quillRef}
                     placeholder="Share your tech journey…"
                     modules={quillModules}
                     formats={quillFormats}
@@ -298,9 +297,9 @@ export default function CreatePost() {
               ))}
             </div>
 
-            <div className="mt-2 flex items-center justify-between">
-              <div>
-                <label className="mr-2 cursor-pointer text-primary hover:text-info">
+            <div className="flex flex-wrap items-center justify-between space-y-2 md:mt-4 md:flex-nowrap md:space-x-4 md:space-y-0">
+              <div className="flex w-full items-center space-x-2 md:w-auto">
+                <label className="btn btn-outline btn-sm text-primary">
                   <input
                     type="file"
                     accept="image/*,video/*"
@@ -311,16 +310,54 @@ export default function CreatePost() {
                   Photo/Video
                 </label>
               </div>
-
-              <button
-                type="submit"
-                className={`btn rounded-full bg-primary text-white ${
-                  isLoading ? "cursor-not-allowed opacity-50" : ""
-                }`}
-                disabled={isLoading}
-              >
-                {isLoading ? "Posting..." : "Post"}
-              </button>
+              <div className="w-full md:w-1/3">
+                <Controller
+                  name="category"
+                  control={control}
+                  render={({ field }) => (
+                    <select
+                      {...field}
+                      value={field.value.toString()}
+                      className="select select-bordered select-sm w-full"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map((category) => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
+              </div>
+              <div className="w-full md:w-1/3">
+                <Controller
+                  name="isPaid"
+                  control={control}
+                  render={({ field: { onChange, value, ...field } }) => (
+                    <select
+                      {...field}
+                      value={value ? "true" : "false"}
+                      onChange={(e) => onChange(e.target.value === "true")}
+                      className="select select-bordered select-sm w-full"
+                    >
+                      <option value="true">Paid</option>
+                      <option value="false">Free</option>
+                    </select>
+                  )}
+                />
+              </div>
+              <div className="mt-4 md:flex md:w-1/2 md:justify-end">
+                <button
+                  type="submit"
+                  className={`btn btn-sm bg-primary text-white ${
+                    isLoading ? "cursor-not-allowed opacity-50" : ""
+                  }`}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Posting..." : "Post"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

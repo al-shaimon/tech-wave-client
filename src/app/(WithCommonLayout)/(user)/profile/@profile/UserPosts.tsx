@@ -13,6 +13,8 @@ interface UserPostsProps {
 }
 
 interface Post {
+  isPaid: boolean;
+  category: string;
   _id: string;
   content: string;
   images: string[];
@@ -77,6 +79,8 @@ export default function UserPosts({ userId }: UserPostsProps) {
               },
               timestamp: post.createdAt,
               comments: post.comments || 0,
+              isPaid: post.isPaid,
+              category: post.category,
             }}
           />
         ))

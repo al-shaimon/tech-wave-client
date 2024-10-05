@@ -36,7 +36,7 @@ export default function Navbar() {
     // Revalidate the posts tag
     await fetch("/api/revalidate?tag=posts");
 
-    router.refresh(); // Refresh the page to update the
+    // router.refresh(); // Refresh the page to update the
   };
 
   return (

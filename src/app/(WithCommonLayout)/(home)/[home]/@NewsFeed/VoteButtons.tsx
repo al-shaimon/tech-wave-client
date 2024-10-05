@@ -30,7 +30,7 @@ export default function VoteButtons({
       try {
         const decodedUser: any = jwtDecode(token);
         setUser(decodedUser);
-        console.log("User decoded:", decodedUser);
+        // console.log("User decoded:", decodedUser);
       } catch (error) {
         console.error("Invalid token:", error);
         // toast.error("Failed to decode user information. Please log in again.");
@@ -79,7 +79,7 @@ export default function VoteButtons({
       setHasUpVoted(false);
     } else {
       if (hasDownVoted) {
-        updatedVotes = votes + 2; // Remove downVote and add upVote
+        updatedVotes = votes + 1; // Remove downVote and add upVote
         setHasDownVoted(false);
       } else {
         updatedVotes = votes + 1;
@@ -100,7 +100,7 @@ export default function VoteButtons({
       setHasDownVoted(false);
     } else {
       if (hasUpVoted) {
-        updatedVotes = votes - 2; // Remove upVote and add downVote
+        updatedVotes = votes - 1; // Remove upVote and add downVote
         setHasUpVoted(false);
       } else {
         updatedVotes = votes - 1;

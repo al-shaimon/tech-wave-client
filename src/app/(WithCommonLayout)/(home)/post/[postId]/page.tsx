@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -11,20 +12,20 @@ import SkeletonLoader from "@/components/SkeletonLoader";
 
 export default function SinglePostPage() {
   const { postId } = useParams();
-  const [post, setPost] = useState(null);
+  const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchPost = useCallback(async () => {
     try {
       const [postResponse, commentsResponse] = await Promise.all([
         axios.get(`${envConfig.baseApi}/posts/${postId}`),
-        axios.get(`${envConfig.baseApi}/comments/post/${postId}`)
+        axios.get(`${envConfig.baseApi}/comments/post/${postId}`),
       ]);
       if (postResponse.data.success && commentsResponse.data.success) {
         const postData = {
           ...postResponse.data.data,
           timestamp: postResponse.data.data.createdAt,
-          comments: commentsResponse.data.data
+          comments: commentsResponse.data.data,
         };
         setPost(postData);
       }
@@ -54,9 +55,11 @@ export default function SinglePostPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <FeedPost post={post} />
-      <CommentSection 
-        postId={Array.isArray(postId) ? postId[0] : postId} 
+      <FeedPost
+        post={{ ...post, isPaid: post.isPaid, category: post.category }}
+      />
+      <CommentSection
+        postId={Array.isArray(postId) ? postId[0] : postId}
         onCommentUpdate={handleCommentUpdate}
       />
     </div>

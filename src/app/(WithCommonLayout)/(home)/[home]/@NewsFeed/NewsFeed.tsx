@@ -1,26 +1,45 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+import { useState, useEffect } from "react";
+import useSWR from "swr";
 import PostList from "./PostList";
 import envConfig from "@/config/envConfig";
+import SkeletonLoader from "@/components/SkeletonLoader";
 
-// Server-side function to fetch posts
-async function getPosts() {
-  try {
-    const response = await fetch(`${envConfig.baseApi}/posts`, {
-      next: { tags: ["posts"] },
-    });
-    const data = await response.json();
-    return data.success ? data.data : [];
-  } catch (error) {
-    console.error("Failed to fetch posts:", error);
-    return [];
-  }
-}
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export default async function NewsFeedPage() {
-  const posts = await getPosts(); // Fetch posts on the server
+export default function NewsFeedPage() {
+  const { data, error, mutate } = useSWR(
+    `${envConfig.baseApi}/posts`,
+    fetcher,
+    {
+      refreshInterval: 5000, // Refresh every 5 seconds
+    },
+  );
+
+  useEffect(() => {
+    // Listen for new post events
+    const eventSource = new EventSource(`${envConfig.baseApi}/posts/events`);
+    eventSource.onmessage = (event) => {
+      mutate(); // Revalidate the data when a new post is created
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [mutate]);
+
+  if (error) return <div>Failed to load posts</div>;
+  if (!data)
+    return (
+      <div>
+        <SkeletonLoader />
+      </div>
+    );
 
   return (
     <div className="my-2 border-t border-grey p-1 md:p-4">
-      <PostList initialPosts={posts} />
+      <PostList initialPosts={data.data} />
     </div>
   );
 }

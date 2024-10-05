@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation"; // from 'next/navigation' in App Router
+import { toast } from "sonner";
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -12,19 +13,21 @@ export default function LogoutButton() {
         method: "POST",
       });
 
-      localStorage.removeItem("token");
-
-      localStorage.removeItem("profilePhoto");
-
       if (response.ok) {
-        // On success, redirect to the home page or refresh the app state
-        router.push("/");
-        router.refresh(); // Reload the page to reflect the updated auth state
+        localStorage.removeItem("token");
+        localStorage.removeItem("profilePhoto");
+        localStorage.removeItem("isVerified");
+
+        toast.success("Logged out successfully");
+        window.location.href = "/login";
+        router.refresh();
       } else {
         console.error("Failed to log out");
+        toast.error("Failed to log out");
       }
     } catch (error) {
       console.error("Error during logout:", error);
+      toast.error("Error during logout");
     }
   };
 

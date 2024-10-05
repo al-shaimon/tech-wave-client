@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import envConfig from "@/config/envConfig";
 import SkeletonLoader from "@/components/SkeletonLoader";
@@ -16,6 +16,8 @@ interface User {
 }
 
 interface PostData {
+  isPaid: boolean;
+  category: string;
   _id: string;
   user: User;
   content: string;
@@ -35,18 +37,22 @@ export default function PostList({ initialPosts }: PostListProps) {
   const [postsData, setPostsData] = useState<PostData[]>(initialPosts);
   const [loading, setLoading] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const fetchNewPosts = async () => {
     setLoading(true);
     try {
       const response = await axios.get(`${envConfig.baseApi}/posts`);
       if (response.data.success) {
         const newPosts = response.data.data;
-        setPostsData(prevPosts => {
-          const existingPostIds = new Set(prevPosts.map(post => post._id));
-          const uniqueNewPosts = newPosts.filter((post: PostData) => !existingPostIds.has(post._id));
+        setPostsData((prevPosts) => {
+          const existingPostIds = new Set(prevPosts.map((post) => post._id));
+          const uniqueNewPosts = newPosts.filter(
+            (post: PostData) => !existingPostIds.has(post._id),
+          );
           return [...uniqueNewPosts, ...prevPosts];
         });
       }
+      
     } catch (error) {
       console.error("Error fetching new posts:", error);
     } finally {
@@ -54,10 +60,6 @@ export default function PostList({ initialPosts }: PostListProps) {
     }
   };
 
-  useEffect(() => {
-    const interval = setInterval(fetchNewPosts, 30000); // Fetch new posts every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div>
@@ -85,6 +87,8 @@ export default function PostList({ initialPosts }: PostListProps) {
               timestamp: post.createdAt,
               votes: post.votes,
               comments: post.comments.length || post.commentCount || 0,
+              isPaid: post.isPaid,
+              category: post.category,
             }}
           />
         ))

@@ -10,6 +10,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
 import { jwtDecode, JwtPayload } from "jwt-decode";
+import { useRouter } from "next/navigation";
 
 interface CustomJwtPayload extends JwtPayload {
   profilePhoto?: string;
@@ -34,11 +35,12 @@ interface ForgotPasswordInput {
 
 export default function LoginSignupModal() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLogin, setIsLogin] = useState(true); // Toggle between login and signup
-  const [isForgotPassword, setIsForgotPassword] = useState(false); // Toggle for forgot password
-  const [resetLinkSent, setResetLinkSent] = useState(false); // State to manage the reset link sent
-  const [errorMessage, setErrorMessage] = useState(""); // Error message state
-  const [isLoading, setIsLoading] = useState(false); // Loading state to disable buttons during API calls
+  const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetLinkSent, setResetLinkSent] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const loginForm = useForm<LoginFormInput>();
   const signupForm = useForm<SignupFormInput>();
@@ -47,10 +49,10 @@ export default function LoginSignupModal() {
   const openModal = () => setIsOpen(true);
   const closeModal = () => {
     setIsOpen(false);
-    setIsLogin(true); // Reset state when closing
-    setIsForgotPassword(false); // Reset forgot password state
-    setResetLinkSent(false); // Reset reset link sent state
-    setErrorMessage(""); // Clear error message
+    setIsLogin(true);
+    setIsForgotPassword(false);
+    setResetLinkSent(false);
+    setErrorMessage("");
   };
 
   const setTokenInCookies = async (token: string) => {
@@ -89,7 +91,9 @@ export default function LoginSignupModal() {
       }
 
       closeModal();
-      window.location.href = "/";
+      // window.location.href = "/";
+      router.push("/");
+      router.refresh();
     } catch (error: any) {
       console.error("Login failed", error);
       setErrorMessage(
@@ -116,7 +120,13 @@ export default function LoginSignupModal() {
       );
       console.log("Signup success", response.data);
       toast.success("Signup successful!"); // Show success toast
-      closeModal();
+      // closeModal();
+
+      signupForm.reset();
+
+      setIsLogin(true);
+
+      loginForm.reset();
     } catch (error: any) {
       console.error("Signup failed", error);
       if (error?.response?.data?.message?.includes("E11000")) {
@@ -172,7 +182,7 @@ export default function LoginSignupModal() {
       {isOpen && (
         <div
           className={clsx(
-            "fixed inset-0 z-10 flex items-center justify-center bg-black bg-opacity-50 transition-opacity",
+            "fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 transition-opacity",
             isOpen ? "opacity-100" : "opacity-0",
           )}
         >

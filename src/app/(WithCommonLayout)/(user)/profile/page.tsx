@@ -117,6 +117,8 @@ export default function Profile() {
       await fetch("/api/revalidate?tag=followers");
       await fetch("/api/revalidate?tag=following");
 
+      router.push("/profile");
+      window.location.reload();
       router.refresh(); // Refresh the page to update the newsfeed
     } catch (error) {
       console.error("Error updating profile:", error);
