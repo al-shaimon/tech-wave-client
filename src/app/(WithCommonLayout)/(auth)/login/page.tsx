@@ -12,6 +12,7 @@ import { jwtDecode, JwtPayload } from "jwt-decode";
 import { useRouter } from "next/navigation";
 
 interface CustomJwtPayload extends JwtPayload {
+  isVerified?: any;
   profilePhoto?: string;
 }
 
