@@ -11,13 +11,23 @@ import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
 import { useRouter } from "next/navigation";
 import SkeletonLoader from "@/components/SkeletonLoader";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
+import AnalyticsModal from "@/app/(WithCommonLayout)/(user)/profile/AnalyticsModal";
 
-const EditProfileModal = dynamic(() => import('./@profile/EditProfileModal'), { ssr: false });
-const VerificationModal = dynamic(() => import('./@profile/VerificationModal'), { ssr: false });
-const UserPosts = dynamic(() => import('./@profile/UserPosts'), { ssr: false });
-const FollowersModal = dynamic(() => import('./@profile/FollowersModal'), { ssr: false });
-const FollowingModal = dynamic(() => import('./@profile/FollowingModal'), { ssr: false });
+const EditProfileModal = dynamic(() => import("./@profile/EditProfileModal"), {
+  ssr: false,
+});
+const VerificationModal = dynamic(
+  () => import("./@profile/VerificationModal"),
+  { ssr: false },
+);
+const UserPosts = dynamic(() => import("./@profile/UserPosts"), { ssr: false });
+const FollowersModal = dynamic(() => import("./@profile/FollowersModal"), {
+  ssr: false,
+});
+const FollowingModal = dynamic(() => import("./@profile/FollowingModal"), {
+  ssr: false,
+});
 
 interface User {
   id: string;
@@ -29,10 +39,11 @@ interface User {
   role: string;
   followersCount: number;
   followingCount: number;
+  posts: any[];
 }
 
 export default function ProfileContent() {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return null;
   }
 
@@ -46,9 +57,10 @@ export default function ProfileContent() {
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
       if (token) {
         const decodedToken: { id: string } = jwtDecode(token);
@@ -63,8 +75,12 @@ export default function ProfileContent() {
       if (!userId) return;
 
       try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-        const storedProfilePhoto = typeof window !== 'undefined' ? localStorage.getItem("profilePhoto") : null;
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const storedProfilePhoto =
+          typeof window !== "undefined"
+            ? localStorage.getItem("profilePhoto")
+            : null;
         setProfilePhoto(storedProfilePhoto);
         const response = await axios.get(
           `${envConfig.baseApi}/auth/${userId}`,
@@ -75,6 +91,7 @@ export default function ProfileContent() {
 
         if (response.data.success) {
           const userData = response.data.data;
+          console.log("User data received:", userData);
           setUser({
             id: userData._id,
             name: userData.name,
@@ -85,6 +102,7 @@ export default function ProfileContent() {
             phone: userData.phone,
             followersCount: userData.followersCount,
             followingCount: userData.followingCount,
+            posts: userData.posts, // Make sure this is included
           });
           setFollowersCount(userData.followersCount);
           setFollowingCount(userData.followingCount);
@@ -101,7 +119,8 @@ export default function ProfileContent() {
 
   const handleEditProfile = async (updatedData: Partial<User>) => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
       if (!token) throw new Error("No token found");
 
       const response = await axios.post(
@@ -116,7 +135,7 @@ export default function ProfileContent() {
 
       if (response.data.success) {
         setUser((prevUser) => ({ ...prevUser!, ...updatedData }));
-        if (updatedData.profilePhoto && typeof window !== 'undefined') {
+        if (updatedData.profilePhoto && typeof window !== "undefined") {
           localStorage.setItem("profilePhoto", updatedData.profilePhoto);
         }
         toast.success("Profile updated successfully!");
@@ -130,7 +149,7 @@ export default function ProfileContent() {
       await fetch("/api/revalidate?tag=following");
 
       router.push("/profile");
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         window.location.reload();
       }
       router.refresh(); // Refresh the page to update the newsfeed
@@ -169,7 +188,7 @@ export default function ProfileContent() {
   return (
     <div className="mx-auto py-4">
       <div>
-        <div className="flex items-center justify-between px-4">
+        <div className="flex flex-col justify-between px-4 md:flex-row">
           <div className="flex items-center">
             <Image
               className="h-12 w-12 rounded-full md:h-20 md:w-20"
@@ -205,12 +224,21 @@ export default function ProfileContent() {
               </p>
             </div>
           </div>
-          <button
-            className="rounded border border-gray-300 px-4 py-2 text-xs hover:bg-base-300 md:text-base"
-            onClick={() => setShowEditModal(true)}
-          >
-            Edit Profile
-          </button>
+
+          <div className="mt-2 flex w-full gap-1 md:mt-0 md:w-auto md:flex-row">
+            <button
+              className="btn btn-sm mr-2 w-1/2 rounded border border-gray-300 px-4 py-2 text-xs text-white md:btn-md hover:bg-base-300 md:w-auto md:text-base"
+              onClick={() => setShowEditModal(true)}
+            >
+              Edit Profile
+            </button>
+            <button
+              className="btn btn-sm mr-2 w-1/2 rounded border border-gray-300 px-4 py-2 text-xs text-white md:btn-md hover:bg-base-300 md:w-auto md:text-base"
+              onClick={() => setShowAnalyticsModal(true)}
+            >
+              View Analytics
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 flex px-4">
@@ -277,6 +305,14 @@ export default function ProfileContent() {
         <div className="mt-8 border-t border-grey">
           <UserPosts userId={user.id} />
         </div>
+      )}
+
+      {showAnalyticsModal && user && (
+        <AnalyticsModal
+          onClose={() => setShowAnalyticsModal(false)}
+          posts={user.posts || []}
+          userId={user.id}
+        />
       )}
     </div>
   );

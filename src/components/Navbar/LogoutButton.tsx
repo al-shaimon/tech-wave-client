@@ -1,5 +1,6 @@
 "use client";
 
+import { clearAnalyticsData } from "@/utils/utilts";
 import { useRouter } from "next/navigation"; // from 'next/navigation' in App Router
 import { toast } from "sonner";
 
@@ -17,6 +18,8 @@ export default function LogoutButton() {
         localStorage.removeItem("token");
         localStorage.removeItem("profilePhoto");
         localStorage.removeItem("isVerified");
+
+        clearAnalyticsData();
 
         toast.success("Logged out successfully");
         window.location.href = "/login";
