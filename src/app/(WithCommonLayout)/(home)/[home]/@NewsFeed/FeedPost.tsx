@@ -50,6 +50,10 @@ interface Post {
   category: string;
 }
 
+interface DecodedToken {
+  id: string;
+  role: string;
+}
 
 interface FeedPostProps {
   post: Post;
@@ -58,7 +62,12 @@ interface FeedPostProps {
   isProfilePage?: boolean;
 }
 
-export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false }: FeedPostProps) {
+export default function FeedPost({
+  post,
+  onEdit,
+  onDelete,
+  isProfilePage = false,
+}: FeedPostProps) {
   let timeAgo: string;
 
   const [loading, setLoading] = useState(false);
@@ -70,6 +79,7 @@ export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false
   const [isVerified, setIsVerified] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isUserVerified, setIsUserVerified] = useState(false);
+  const [userRole, setUserRole] = useState("");
   const [isPostOwner, setIsPostOwner] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -78,10 +88,11 @@ export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false
     const isVerified = localStorage.getItem("isVerified") === "true";
 
     if (token) {
-      const decodedToken: { id: string } = jwtDecode(token);
+      const decodedToken: DecodedToken = jwtDecode(token);
       setUserId(decodedToken.id);
       setIsPostOwner(decodedToken.id === post.user._id);
-      setIsUserVerified(isVerified);
+      setIsUserVerified(isVerified || decodedToken.role === "admin");
+      setUserRole(decodedToken.role);
     }
     setIsLoading(false);
   }, [post.user._id]);
@@ -102,7 +113,6 @@ export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false
             headers: { Authorization: `${token}` },
           },
         );
-
 
         if (response.data.success) {
           setIsFollowing(response.data.data.isFollowing);
@@ -139,7 +149,6 @@ export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false
       throw new Error("Invalid date");
     }
 
-
     if (timeDifferenceInHours < 24) {
       if (timeDifferenceInHours < 1) {
         const timeDifferenceInMinutes = Math.floor(
@@ -160,7 +169,6 @@ export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false
     console.error("Error parsing timestamp:", error);
     timeAgo = "Invalid date";
   }
-
 
   const username2 = `@${post.user.email?.split("@")[0] || "unknown"}`;
   const username = `${post.user.username || username2}`;
@@ -274,7 +282,6 @@ export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false
         }
       }
 
-
       // Add videos as links
       if (post.videos && post.videos.length > 0) {
         doc.setFontSize(12);
@@ -316,7 +323,6 @@ export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false
     }
   };
 
-
   const handleFollowUnfollow = async () => {
     if (!userId || userId === post.user._id) return;
 
@@ -330,7 +336,6 @@ export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false
           headers: { Authorization: `${token}` },
         },
       );
-
 
       if (response.data.success) {
         setIsFollowing(!isFollowing);
@@ -394,13 +399,16 @@ export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false
   return (
     <>
       <div className="relative mb-4 rounded-lg border-grey bg-base-100 py-4 shadow-2xl md:w-full md:border md:p-4">
-        {post.isPaid && !isUserVerified && !isPostOwner && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg backdrop-blur-md">
-            <button onClick={handleUnlock} className="btn btn-primary">
-              Pay $20 to Unlock All Premium Posts
-            </button>
-          </div>
-        )}
+        {post.isPaid &&
+          !isUserVerified &&
+          !isPostOwner &&
+          userRole !== "admin" && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg backdrop-blur-md">
+              <button onClick={handleUnlock} className="btn btn-primary">
+                Pay $20 to Unlock All Premium Posts
+              </button>
+            </div>
+          )}
         <div
           className={
             post.isPaid && !isUserVerified && !isPostOwner
