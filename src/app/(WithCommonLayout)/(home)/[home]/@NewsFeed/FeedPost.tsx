@@ -398,7 +398,7 @@ export default function FeedPost({
 
   return (
     <>
-      <div className="relative mb-4 rounded-lg border-grey bg-base-100 py-4 shadow-2xl md:w-full md:border md:p-4">
+      <div className="relative mb-4 w-full rounded-lg border-grey bg-base-100 py-4 shadow-2xl md:border md:p-4">
         {post.isPaid &&
           !isUserVerified &&
           !isPostOwner &&
@@ -411,7 +411,10 @@ export default function FeedPost({
           )}
         <div
           className={
-            post.isPaid && !isUserVerified && !isPostOwner
+            post.isPaid &&
+            !isUserVerified &&
+            !isPostOwner &&
+            userRole !== "admin"
               ? "blur-sm filter"
               : ""
           }
@@ -428,23 +431,31 @@ export default function FeedPost({
             <div className="ml-2 w-full text-sm md:ml-4 md:text-base">
               <div className="flex justify-between">
                 <div className="flex items-center">
-                  <span className="font-bold">{post.user.name}</span>{" "}
+                  <span className="text-sm font-bold md:text-base">
+                    {post.user.name}
+                  </span>{" "}
                   {post.user.isVerified === true ? (
                     <Image
-                      className="ml-[3px] mr-[5px]"
+                      className="ml-[2px] mr-[3px] md:ml-[3px] md:mr-[5px]"
                       src="/verified.svg"
                       alt="Verified"
                       width={20}
                       height={20}
                     />
                   ) : (
-                    <span className="mx-[5px]"></span>
+                    <span className="mx-[2px] md:mx-[5px]"></span>
                   )}
-                  <span className="text-gray-500">{username}</span>
-                  <span className="ml-1 text-gray-500 md:ml-3">•</span>
-                  <span className="ml-1 text-gray-500 md:ml-3">{timeAgo}</span>
+                  <span className="text-sm text-gray-500 md:text-base">
+                    {username}
+                  </span>
+                  <span className="ml-1 text-sm text-gray-500 md:ml-3 md:text-base">
+                    •
+                  </span>
+                  <span className="ml-1 text-sm text-gray-500 md:ml-3 md:text-base">
+                    {timeAgo}
+                  </span>
                   {post.isPaid === true && (
-                    <div className="badge badge-primary badge-outline badge-sm ml-3 md:badge-md">
+                    <div className="badge badge-primary badge-outline badge-xs mx-[3.5px] md:badge-md md:mx-4">
                       Premium
                     </div>
                   )}
