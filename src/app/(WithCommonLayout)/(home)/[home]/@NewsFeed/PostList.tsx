@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import FeedPost from "./FeedPost";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -17,7 +17,10 @@ interface User {
 
 interface PostData {
   isPaid: boolean;
-  category: string;
+  category: {
+    _id: string;
+    name: string;
+  };
   _id: string;
   user: User;
   content: string;
@@ -31,31 +34,51 @@ interface PostData {
 
 interface PostListProps {
   initialPosts: PostData[];
+  sortBy: string;
+  selectedCategory: string;
 }
 
-export default function PostList({ initialPosts }: PostListProps) {
-  const [postsData, setPostsData] = useState<PostData[]>(initialPosts);
-  const [visiblePosts, setVisiblePosts] = useState<PostData[]>(
-    initialPosts.slice(0, 50),
-  ); // First 10 posts visible initially
-  const [hasMore, setHasMore] = useState(true); // Infinite scroll flag
-  const [loading, setLoading] = useState(false); // Loading state
+export default function PostList({ initialPosts, sortBy, selectedCategory }: PostListProps) {
+  const [visiblePosts, setVisiblePosts] = useState<PostData[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Function to shuffle the posts array
-  const shuffleArray = (array: PostData[]) => {
-    return array.sort(() => Math.random() - 0.5);
-  };
+  useEffect(() => {
+    const filteredPosts = initialPosts.filter((post) =>
+      selectedCategory ? post.category._id === selectedCategory : true
+    );
+
+    const sortedPosts = [...filteredPosts].sort((a, b) => {
+      if (sortBy === "votes") {
+        return b.votes - a.votes;
+      } else {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+
+    setVisiblePosts(sortedPosts.slice(0, 10));
+    setHasMore(sortedPosts.length > 10);
+  }, [initialPosts, sortBy, selectedCategory]);
 
   const fetchMorePosts = () => {
     setLoading(true);
 
-    const shuffledPosts = shuffleArray(postsData);
+    const filteredPosts = initialPosts.filter((post) =>
+      selectedCategory ? post.category._id === selectedCategory : true
+    );
 
-    setVisiblePosts((prevPosts) => [
-      ...prevPosts,
-      ...shuffledPosts.slice(0, 10),
-    ]);
+    const sortedPosts = [...filteredPosts].sort((a, b) => {
+      if (sortBy === "votes") {
+        return b.votes - a.votes;
+      } else {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
 
+    const nextPosts = sortedPosts.slice(visiblePosts.length, visiblePosts.length + 10);
+
+    setVisiblePosts((prevPosts) => [...prevPosts, ...nextPosts]);
+    setHasMore(visiblePosts.length + nextPosts.length < sortedPosts.length);
     setLoading(false);
   };
 
@@ -71,13 +94,12 @@ export default function PostList({ initialPosts }: PostListProps) {
         </p>
       }
     >
-      {/* Render the visible posts */}
       {visiblePosts.length > 0 ? (
         visiblePosts.map((post) => (
           <FeedPost
             key={post._id}
             post={{
-              _id: post._id,
+              ...post,
               user: {
                 name: post?.user?.name,
                 username: `@${post?.user?.email?.split("@")[0]}`,
@@ -93,7 +115,7 @@ export default function PostList({ initialPosts }: PostListProps) {
               votes: post.votes,
               comments: post.comments.length || post.commentCount || 0,
               isPaid: post.isPaid,
-              category: post.category,
+              category: post.category.name,
             }}
           />
         ))
