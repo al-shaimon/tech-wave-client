@@ -261,7 +261,6 @@ export default function Profile() {
 
       {user && (
         <div className="mt-8 border-t border-grey">
-          {/* <h2 className="mb-4 text-2xl font-bold">My Posts</h2> */}
           <UserPosts userId={user.id} />
         </div>
       )}

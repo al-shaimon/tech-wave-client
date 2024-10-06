@@ -9,8 +9,8 @@ import SkeletonLoader from "@/components/SkeletonLoader";
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function NewsFeedPage() {
-  const [sortBy, setSortBy] = useState("latest");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [sortBy, setSortBy] = useState("latest"); // Default sort by "latest"
+  const [selectedCategory, setSelectedCategory] = useState("all"); // Default to "all categories"
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>(
     [],
   );
@@ -54,6 +54,9 @@ export default function NewsFeedPage() {
       </div>
     );
 
+  // Determine if we should show infinite scroll based on sorting and filtering
+  const showInfiniteScroll = sortBy === "latest" && selectedCategory === "all";
+
   return (
     <div className="my-2 border-t border-grey p-1 md:p-4">
       <div className="mb-4 flex items-center gap-x-3 md:flex-wrap">
@@ -73,7 +76,7 @@ export default function NewsFeedPage() {
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
           >
-            <option value="">All Categories</option>
+            <option value="all">All Categories</option>
             {categories.map((category) => (
               <option key={category._id} value={category._id}>
                 {category.name}
@@ -82,10 +85,13 @@ export default function NewsFeedPage() {
           </select>
         </div>
       </div>
+
+      {/* Conditionally render PostList with infinite scroll or filtered view */}
       <PostList
         initialPosts={postsData.data}
         sortBy={sortBy}
         selectedCategory={selectedCategory}
+        showInfiniteScroll={showInfiniteScroll} // Pass flag to control scroll
       />
     </div>
   );

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-
 import { useState, useEffect } from "react";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import FeedPost from "./FeedPost";
@@ -36,94 +35,136 @@ interface PostListProps {
   initialPosts: PostData[];
   sortBy: string;
   selectedCategory: string;
+  showInfiniteScroll: boolean;
 }
 
-export default function PostList({ initialPosts, sortBy, selectedCategory }: PostListProps) {
+export default function PostList({
+  initialPosts,
+  sortBy,
+  selectedCategory,
+  showInfiniteScroll,
+}: PostListProps) {
+  const [postsData, setPostsData] = useState<PostData[]>(initialPosts);
   const [visiblePosts, setVisiblePosts] = useState<PostData[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
 
+  // Shuffle posts for infinite scroll
+  const shuffleArray = (array: PostData[]) => {
+    return array.sort(() => Math.random() - 0.5);
+  };
+
   useEffect(() => {
-    const filteredPosts = initialPosts.filter((post) =>
-      selectedCategory ? post.category._id === selectedCategory : true
-    );
+    setVisiblePosts([]);
+    setHasMore(true);
+    const filterAndSortPosts = () => {
+      let filtered = initialPosts;
 
-    const sortedPosts = [...filteredPosts].sort((a, b) => {
-      if (sortBy === "votes") {
-        return b.votes - a.votes;
-      } else {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (selectedCategory !== "all") {
+        filtered = initialPosts.filter(
+          (post) => post.category._id === selectedCategory,
+        );
       }
-    });
 
-    setVisiblePosts(sortedPosts.slice(0, 10));
-    setHasMore(sortedPosts.length > 10);
+      const sorted = [...filtered].sort((a, b) => {
+        if (sortBy === "votes") {
+          return b.votes - a.votes;
+        } else if (sortBy === "latest") {
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        }
+        return 0;
+      });
+
+      setVisiblePosts(sorted.slice(0, 50));
+      setHasMore(sorted.length > 1);
+    };
+
+    filterAndSortPosts();
   }, [initialPosts, sortBy, selectedCategory]);
 
   const fetchMorePosts = () => {
     setLoading(true);
 
-    const filteredPosts = initialPosts.filter((post) =>
-      selectedCategory ? post.category._id === selectedCategory : true
-    );
+    const shuffledPosts = shuffleArray(postsData);
 
-    const sortedPosts = [...filteredPosts].sort((a, b) => {
-      if (sortBy === "votes") {
-        return b.votes - a.votes;
-      } else {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-    });
+    setVisiblePosts((prevPosts) => [
+      ...prevPosts,
+      ...shuffledPosts.slice(0, 10),
+    ]);
 
-    const nextPosts = sortedPosts.slice(visiblePosts.length, visiblePosts.length + 10);
-
-    setVisiblePosts((prevPosts) => [...prevPosts, ...nextPosts]);
-    setHasMore(visiblePosts.length + nextPosts.length < sortedPosts.length);
     setLoading(false);
   };
 
   return (
-    <InfiniteScroll
-      dataLength={visiblePosts.length}
-      next={fetchMorePosts}
-      hasMore={hasMore}
-      loader={<SkeletonLoader />}
-      endMessage={
-        <p className="my-10 flex items-center justify-center">
-          No more posts available
-        </p>
-      }
-    >
-      {visiblePosts.length > 0 ? (
-        visiblePosts.map((post) => (
-          <FeedPost
-            key={post._id}
-            post={{
-              ...post,
-              user: {
-                name: post?.user?.name,
-                username: `@${post?.user?.email?.split("@")[0]}`,
-                profilePhoto: post?.user?.profilePhoto,
-                isVerified: post.user.isVerified,
-                isFollowing: false,
-                _id: post.user._id,
-              },
-              content: post.content,
-              images: post.images,
-              videos: post.videos,
-              timestamp: post.createdAt,
-              votes: post.votes,
-              comments: post.comments.length || post.commentCount || 0,
-              isPaid: post.isPaid,
-              category: post.category.name,
-            }}
-          />
-        ))
+    <>
+      {showInfiniteScroll ? (
+        <InfiniteScroll
+          dataLength={visiblePosts.length}
+          next={fetchMorePosts}
+          hasMore={hasMore}
+          loader={<SkeletonLoader />}
+          endMessage={
+            <p className="my-10 flex items-center justify-center">
+              No more posts available
+            </p>
+          }
+        >
+          {visiblePosts.map((post) => (
+            <FeedPost
+              key={post._id}
+              post={{
+                ...post,
+                user: {
+                  name: post.user.name,
+                  username: `@${post.user.email.split("@")[0]}`,
+                  profilePhoto: post.user.profilePhoto,
+                  isVerified: post.user.isVerified,
+                  isFollowing: false,
+                  _id: post.user._id,
+                },
+                content: post.content,
+                images: post.images,
+                videos: post.videos,
+                timestamp: post.createdAt,
+                votes: post.votes,
+                comments: post.comments.length || post.commentCount || 0,
+                isPaid: post.isPaid,
+                category: post.category.name,
+              }}
+            />
+          ))}
+        </InfiniteScroll>
       ) : (
-        <p className="my-10 flex items-center justify-center">
-          No posts available
-        </p>
+        <div>
+          {/* Display filtered posts if not using infinite scroll */}
+          {visiblePosts.map((post) => (
+            <FeedPost
+              key={post._id}
+              post={{
+                ...post,
+                user: {
+                  name: post.user.name,
+                  username: `@${post.user.email.split("@")[0]}`,
+                  profilePhoto: post.user.profilePhoto,
+                  isVerified: post.user.isVerified,
+                  isFollowing: false,
+                  _id: post.user._id,
+                },
+                content: post.content,
+                images: post.images,
+                videos: post.videos,
+                timestamp: post.createdAt,
+                votes: post.votes,
+                comments: post.comments.length || post.commentCount || 0,
+                isPaid: post.isPaid,
+                category: post.category.name,
+              }}
+            />
+          ))}
+        </div>
       )}
-    </InfiniteScroll>
+    </>
   );
 }
