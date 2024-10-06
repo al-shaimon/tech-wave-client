@@ -1,25 +1,31 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client"; // Ensures the component is client-side
-import { useEffect, useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import LoginSignupModal from "./LoginSignupModal"; // Import the modal
 import Link from "next/link";
-import { jwtDecode, JwtPayload } from "jwt-decode"; // Corrected import
-import LogoutButton from "@/components/Navbar/LogoutButton";
+import { jwtDecode } from "jwt-decode"; // Corrected import
+import LogoutButton from "./LogoutButton";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import { debounce } from "lodash";
+import envConfig from "@/config/envConfig";
+import SearchResults from "./SearchResults";
 
-interface ExtendedJwtPayload extends JwtPayload {
+interface ExtendedJwtPayload {
+  id: string;
   role: string;
-  profilePhoto?: string;
 }
 
 export default function Navbar() {
   const [user, setUser] = useState<ExtendedJwtPayload | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
-    // Safely access localStorage on the client side
     const token = localStorage.getItem("token");
     const photo = localStorage.getItem("profilePhoto");
 
@@ -31,7 +37,7 @@ export default function Navbar() {
     if (photo) {
       setProfilePhoto(photo);
     }
-  }, []); // Runs once after component mounts
+  }, []);
 
   const handleHome = async () => {
     router.push("/"); // Navigate to the home page
@@ -41,6 +47,36 @@ export default function Navbar() {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const debouncedSearch = useCallback(
+    debounce(async (query) => {
+      if (query.trim() === "") {
+        setSearchResults([]);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${envConfig.baseApi}/posts`, {
+          params: { searchTerm: query },
+        });
+        setSearchResults(response.data.data);
+      } catch (error) {
+        console.error("Error searching posts:", error);
+      }
+    }, 300),
+    []
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    debouncedSearch(query);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
   };
 
   return (
@@ -86,12 +122,17 @@ export default function Navbar() {
       </div>
 
       <div className="navbar-center">
-        <div className="form-control ml-2 w-40 md:w-[300px] lg:w-[560px]">
+        <div className="form-control ml-2 w-40 md:w-[300px] lg:w-[560px] relative">
           <input
             type="text"
             placeholder="Search"
             className="input input-bordered w-full"
+            value={searchQuery}
+            onChange={handleSearchChange}
           />
+          {searchResults.length > 0 && (
+            <SearchResults results={searchResults} onResultClick={clearSearch} />
+          )}
         </div>
       </div>
 
