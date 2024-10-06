@@ -419,8 +419,13 @@ export default function FeedPost({ post }: { post: Post }) {
                     <span className="mx-[5px]"></span>
                   )}
                   <span className="text-gray-500">{username}</span>
-                  <span className="ml-3 text-gray-500">•</span>
-                  <span className="ml-3 text-gray-500">{timeAgo}</span>
+                  <span className="ml-1 text-gray-500 md:ml-3">•</span>
+                  <span className="ml-1 text-gray-500 md:ml-3">{timeAgo}</span>
+                  {post.isPaid === true && (
+                    <div className="badge badge-primary badge-outline badge-sm ml-3 md:badge-md">
+                      Premium
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center justify-center">
                   <div className="dropdown dropdown-end">

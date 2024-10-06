@@ -35,6 +35,7 @@ export function middleware(req: NextRequest) {
     // If there's no token and the user is trying to access protected routes, redirect to login
     const isProtectedRoute =
       req.nextUrl.pathname.startsWith("/profile") ||
+      req.nextUrl.pathname.startsWith("/post") ||
       req.nextUrl.pathname.startsWith("/admin");
 
     if (isProtectedRoute) {
@@ -46,5 +47,11 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/profile/:path*", "/admin/:path*", "/login", "/signup"],
+  matcher: [
+    "/profile/:path*",
+    "/post/:path*",
+    "/admin/:path*",
+    "/login",
+    "/signup",
+  ],
 };
