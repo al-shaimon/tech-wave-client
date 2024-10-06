@@ -50,7 +50,15 @@ interface Post {
   category: string;
 }
 
-export default function FeedPost({ post }: { post: Post }) {
+
+interface FeedPostProps {
+  post: Post;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  isProfilePage?: boolean;
+}
+
+export default function FeedPost({ post, onEdit, onDelete, isProfilePage = false }: FeedPostProps) {
   let timeAgo: string;
 
   const [loading, setLoading] = useState(false);
@@ -95,6 +103,7 @@ export default function FeedPost({ post }: { post: Post }) {
           },
         );
 
+
         if (response.data.success) {
           setIsFollowing(response.data.data.isFollowing);
         }
@@ -130,6 +139,7 @@ export default function FeedPost({ post }: { post: Post }) {
       throw new Error("Invalid date");
     }
 
+
     if (timeDifferenceInHours < 24) {
       if (timeDifferenceInHours < 1) {
         const timeDifferenceInMinutes = Math.floor(
@@ -150,6 +160,7 @@ export default function FeedPost({ post }: { post: Post }) {
     console.error("Error parsing timestamp:", error);
     timeAgo = "Invalid date";
   }
+
 
   const username2 = `@${post.user.email?.split("@")[0] || "unknown"}`;
   const username = `${post.user.username || username2}`;
@@ -263,6 +274,7 @@ export default function FeedPost({ post }: { post: Post }) {
         }
       }
 
+
       // Add videos as links
       if (post.videos && post.videos.length > 0) {
         doc.setFontSize(12);
@@ -304,6 +316,7 @@ export default function FeedPost({ post }: { post: Post }) {
     }
   };
 
+
   const handleFollowUnfollow = async () => {
     if (!userId || userId === post.user._id) return;
 
@@ -317,6 +330,7 @@ export default function FeedPost({ post }: { post: Post }) {
           headers: { Authorization: `${token}` },
         },
       );
+
 
       if (response.data.success) {
         setIsFollowing(!isFollowing);
@@ -462,6 +476,32 @@ export default function FeedPost({ post }: { post: Post }) {
                               : `Follow ${post.user.name}`}
                           </button>
                         </li>
+                      )}
+                      {isProfilePage && userId && userId === post.user._id && (
+                        <>
+                          <li className="my-1">
+                            <button onClick={onEdit}>
+                              <Image
+                                src="/edit.svg"
+                                width={16}
+                                height={16}
+                                alt="edit icon"
+                              />
+                              Edit Post
+                            </button>
+                          </li>
+                          <li className="my-1">
+                            <button onClick={onDelete}>
+                              <Image
+                                src="/delete.svg"
+                                width={16}
+                                height={16}
+                                alt="delete icon"
+                              />
+                              Delete Post
+                            </button>
+                          </li>
+                        </>
                       )}
                       <li className="my-1">
                         <button onClick={handleDownload}>

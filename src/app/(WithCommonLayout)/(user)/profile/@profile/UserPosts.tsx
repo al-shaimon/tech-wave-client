@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
 import FeedPost from "../../../(home)/[home]/@NewsFeed/FeedPost";
 import SkeletonLoader from "@/components/SkeletonLoader";
+import EditPostModal from "./EditPostModal";
 
 interface UserPostsProps {
   userId: string;
@@ -48,6 +49,7 @@ export default function UserPosts({ userId }: UserPostsProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const postsPerPage = 10;
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -115,6 +117,60 @@ export default function UserPosts({ userId }: UserPostsProps) {
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
+  const handleEditPost = (post: Post) => {
+    setEditingPost(post);
+  };
+
+  const handleUpdatePost = async (updatedPost: Post) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.put(
+        `${envConfig.baseApi}/posts/${updatedPost._id}`,
+        updatedPost,
+        {
+          headers: { Authorization: `${token}` },
+        },
+      );
+
+      if (response.data.success) {
+        toast.success("Post updated successfully");
+        setEditingPost(null);
+        // Update the post in the local state
+        setPosts(
+          posts.map((post) =>
+            post._id === updatedPost._id ? updatedPost : post,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error("Error updating post:", error);
+      toast.error("Failed to update post");
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.delete(
+          `${envConfig.baseApi}/posts/${postId}`,
+          {
+            headers: { Authorization: `${token}` },
+          },
+        );
+
+        if (response.data.success) {
+          toast.success("Post deleted successfully");
+          // Remove the deleted post from the local state
+          setPosts(posts.filter((post) => post._id !== postId));
+        }
+      } catch (error) {
+        console.error("Error deleting post:", error);
+        toast.error("Failed to delete post");
+      }
+    }
+  };
+
   if (loading || !userInfo) {
     return <SkeletonLoader />;
   }
@@ -168,10 +224,23 @@ export default function UserPosts({ userId }: UserPostsProps) {
                 categories.find((c) => c._id === post.category)?.name ||
                 "Unknown",
             }}
+            onEdit={() => handleEditPost(post)}
+            onDelete={() => handleDeletePost(post._id)}
+            isProfilePage={true}
           />
         ))
       ) : (
         <p className="my-10 text-center text-gray-400">No posts available</p>
+      )}
+
+      {editingPost && (
+        <EditPostModal
+          post={editingPost}
+          onClose={() => setEditingPost(null)}
+          onUpdate={(updatedPost) => {
+            handleUpdatePost(updatedPost as Post).catch(console.error);
+          }}
+        />
       )}
 
       {totalPages > 1 && (
