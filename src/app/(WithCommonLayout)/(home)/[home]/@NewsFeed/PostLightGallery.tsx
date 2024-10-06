@@ -27,7 +27,16 @@ export default function PostLightGallery({ images }: PostLightGalleryProps) {
     >
       {images.map((image, index) => (
         <Link key={index} href={image}>
-          <div className="relative h-64 md:h-96">
+          <div className="relative hidden h-[500px] w-full md:block">
+            <Image
+              src={image}
+              alt={`Image ${index + 1}`}
+              layout="fill"
+              objectFit="cover"
+              className="rounded-md"
+            />
+          </div>
+          <div className="relative h-64 md:hidden md:h-96">
             <Image
               src={image}
               alt={`Image ${index + 1}`}
