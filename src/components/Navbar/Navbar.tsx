@@ -170,24 +170,46 @@ export default function Navbar() {
                   </li>
                   <li>
                     <Link href="/admin/manage-content">
-                      {/* <Image
+                      <Image
                         src="/manage-posts.svg"
                         width={20}
                         height={20}
                         alt="Manage Posts"
-                      /> */}
+                      />
                       Manage Posts
                     </Link>
                   </li>
                   <li>
                     <Link href="/admin/payment-history">
-                      {/* <Image
+                      <Image
                         src="/payment-history.svg"
                         width={20}
                         height={20}
                         alt="Payment History"
-                      /> */}
+                      />
                       Payment History
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/admin/analytics">
+                      <Image
+                        src="/analytics.svg"
+                        width={20}
+                        height={20}
+                        alt="Analytics"
+                      />
+                      Analytics
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/admin/activity-logs">
+                      <Image
+                        src="/activity-logs.svg"
+                        width={20}
+                        height={20}
+                        alt="Activity Logs"
+                      />
+                      Activity Logs
                     </Link>
                   </li>
                 </>
