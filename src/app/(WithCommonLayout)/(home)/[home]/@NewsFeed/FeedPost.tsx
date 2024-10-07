@@ -60,6 +60,8 @@ interface FeedPostProps {
   onEdit?: () => void;
   onDelete?: () => void;
   isProfilePage?: boolean;
+  isAdminView?: boolean;
+  hideFollowButton?: boolean;
 }
 
 export default function FeedPost({
@@ -67,6 +69,8 @@ export default function FeedPost({
   onEdit,
   onDelete,
   isProfilePage = false,
+  isAdminView = false,
+  hideFollowButton = false,
 }: FeedPostProps) {
   let timeAgo: string;
 
@@ -479,7 +483,7 @@ export default function FeedPost({
                       tabIndex={0}
                       className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-200 p-4 shadow"
                     >
-                      {userId && userId !== post.user._id && (
+                      {userId && userId !== post.user._id && !hideFollowButton && (
                         <li className="my-1">
                           <button onClick={handleFollowUnfollow}>
                             <Image
@@ -496,31 +500,18 @@ export default function FeedPost({
                           </button>
                         </li>
                       )}
-                      {isProfilePage && userId && userId === post.user._id && (
-                        <>
-                          <li className="my-1">
-                            <button onClick={onEdit}>
-                              <Image
-                                src="/edit.svg"
-                                width={16}
-                                height={16}
-                                alt="edit icon"
-                              />
-                              Edit Post
-                            </button>
-                          </li>
-                          <li className="my-1">
-                            <button onClick={onDelete}>
-                              <Image
-                                src="/delete.svg"
-                                width={16}
-                                height={16}
-                                alt="delete icon"
-                              />
-                              Delete Post
-                            </button>
-                          </li>
-                        </>
+                      {(isProfilePage || isAdminView) && (
+                        <li className="my-1">
+                          <button onClick={onDelete}>
+                            <Image
+                              src="/delete.svg"
+                              width={16}
+                              height={16}
+                              alt="delete icon"
+                            />
+                            Delete Post
+                          </button>
+                        </li>
                       )}
                       <li className="my-1">
                         <button onClick={handleDownload}>

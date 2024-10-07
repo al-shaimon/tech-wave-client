@@ -65,7 +65,7 @@ export default function Navbar() {
         console.error("Error searching posts:", error);
       }
     }, 300),
-    []
+    [],
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,7 +122,7 @@ export default function Navbar() {
       </div>
 
       <div className="navbar-center">
-        <div className="form-control ml-2 w-40 md:w-[300px] lg:w-[560px] relative">
+        <div className="form-control relative ml-2 w-40 md:w-[300px] lg:w-[560px]">
           <input
             type="text"
             placeholder="Search"
@@ -131,7 +131,10 @@ export default function Navbar() {
             onChange={handleSearchChange}
           />
           {searchResults.length > 0 && (
-            <SearchResults results={searchResults} onResultClick={clearSearch} />
+            <SearchResults
+              results={searchResults}
+              onResultClick={clearSearch}
+            />
           )}
         </div>
       </div>
@@ -159,22 +162,25 @@ export default function Navbar() {
               className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-100 p-2 shadow"
             >
               {user.role === "admin" && (
-                <li>
-                  <Link href="/admin/dashboard" className="justify-between">
-                    Dashboard
-                  </Link>
+                <li className="my-1">
+                  <Link href="/admin/manage-content">Manage Content</Link>
+                </li>
+              )}
+              {user.role === "admin" && (
+                <li className="my-1">
+                  <Link href="/admin/manage-users">Manage User</Link>
                 </li>
               )}
               {user.role === "user" && (
-                <li>
+                <li className="my-1">
                   <Link href="/profile" className="justify-between">
                     Profile
                   </Link>
                 </li>
               )}
-              <li>
+              {/* <li>
                 <a>Settings</a>
-              </li>
+              </li> */}
               <li>
                 <LogoutButton />
               </li>
