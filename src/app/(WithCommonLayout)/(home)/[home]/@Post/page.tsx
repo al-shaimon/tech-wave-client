@@ -167,7 +167,8 @@ export default function CreatePost() {
       setLocalFiles([]);
 
       fetch("/api/revalidate?tag=posts");
-      window.location.href = "/";
+      // window.location.href = "/";
+      router.push("/");
       router.refresh();
     } catch (error: any) {
       console.error("Error creating post:", error);

@@ -20,7 +20,7 @@ export default function NewsFeedPage() {
     error: postsError,
     mutate,
   } = useSWR(`${envConfig.baseApi}/posts`, fetcher, {
-    refreshInterval: 5000, // Refresh every 5 seconds
+    refreshInterval: 60000, // Refresh every 60 seconds
   });
 
   const { data: categoriesData, error: categoriesError } = useSWR(
@@ -50,7 +50,7 @@ export default function NewsFeedPage() {
   if (!postsData || !categoriesData)
     return (
       <div>
-        <SkeletonLoader />
+        {/* <SkeletonLoader /> */}
       </div>
     );
 

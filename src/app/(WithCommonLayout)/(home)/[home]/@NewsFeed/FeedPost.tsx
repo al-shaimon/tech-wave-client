@@ -175,7 +175,6 @@ export default function FeedPost({
     timeAgo = "Invalid date";
   }
 
-
   const username2 = `@${post.user.email?.split("@")[0] || "unknown"}`;
   const username = `${post.user.username || username2}`;
 
@@ -371,7 +370,7 @@ export default function FeedPost({
     toast.success(
       "Payment successful! You are now verified and can view all paid posts.",
     );
-    
+
     const token = localStorage.getItem("token");
     if (token) {
       try {
@@ -389,8 +388,11 @@ export default function FeedPost({
         );
 
         setIsUserVerified(response.data.data.isVerified);
-        localStorage.setItem("isVerified", response.data.data.isVerified.toString());
-        
+        localStorage.setItem(
+          "isVerified",
+          response.data.data.isVerified.toString(),
+        );
+
         // Revalidate the posts tag
         await fetch("/api/revalidate?tag=posts");
 
@@ -462,8 +464,13 @@ export default function FeedPost({
                     {timeAgo}
                   </span>
                   {post.isPaid === true && (
-                    <div className="badge badge-primary badge-outline badge-xs mx-[3.5px] md:badge-md md:mx-4">
+                    <div className="badge badge-primary badge-outline badge-xs mx-[3.5px] hidden md:badge-md md:mx-4 md:block">
                       Premium
+                    </div>
+                  )}
+                  {post.isPaid === true && (
+                    <div className="badge badge-primary badge-outline badge-xs mx-1 md:badge-md md:mx-4 md:hidden">
+                      Paid
                     </div>
                   )}
                 </div>

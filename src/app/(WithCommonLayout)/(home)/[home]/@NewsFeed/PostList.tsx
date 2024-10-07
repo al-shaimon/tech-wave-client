@@ -92,7 +92,7 @@ export default function PostList({
 
     setVisiblePosts((prevPosts) => [
       ...prevPosts,
-      ...shuffledPosts.slice(0, 10),
+      ...shuffledPosts.slice(0, 50),
     ]);
 
     setLoading(false);
