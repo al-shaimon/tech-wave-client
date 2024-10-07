@@ -162,14 +162,35 @@ export default function Navbar() {
               className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-100 p-2 shadow"
             >
               {user.role === "admin" && (
-                <li className="my-1">
-                  <Link href="/admin/manage-content">Manage Content</Link>
-                </li>
-              )}
-              {user.role === "admin" && (
-                <li className="my-1">
-                  <Link href="/admin/manage-users">Manage User</Link>
-                </li>
+                <>
+                  <li>
+                    <Link href="/admin/dashboard" className="justify-between">
+                      Dashboard
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/admin/manage-content">
+                      {/* <Image
+                        src="/manage-posts.svg"
+                        width={20}
+                        height={20}
+                        alt="Manage Posts"
+                      /> */}
+                      Manage Posts
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/admin/payment-history">
+                      {/* <Image
+                        src="/payment-history.svg"
+                        width={20}
+                        height={20}
+                        alt="Payment History"
+                      /> */}
+                      Payment History
+                    </Link>
+                  </li>
+                </>
               )}
               {user.role === "user" && (
                 <li className="my-1">
