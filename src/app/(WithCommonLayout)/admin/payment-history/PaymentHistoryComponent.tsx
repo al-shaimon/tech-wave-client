@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
 import { format } from "date-fns";
+import SkeletonLoader from "@/components/SkeletonLoader";
 
 interface Payment {
   _id: string;
@@ -42,7 +43,11 @@ export default function PaymentHistoryComponent() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div>
+        <SkeletonLoader />
+      </div>
+    );
   }
 
   return (

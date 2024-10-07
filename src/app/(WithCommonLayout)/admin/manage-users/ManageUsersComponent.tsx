@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
+import SkeletonLoader from "@/components/SkeletonLoader";
 
 interface User {
   _id: string;
@@ -89,7 +90,11 @@ export default function ManageUsersComponent() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div>
+        <SkeletonLoader />
+      </div>
+    );
   }
 
   return (

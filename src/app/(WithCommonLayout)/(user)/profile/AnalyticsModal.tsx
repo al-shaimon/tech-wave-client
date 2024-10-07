@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import SkeletonLoader from "@/components/SkeletonLoader";
 
 ChartJS.register(
   CategoryScale,
@@ -61,7 +62,10 @@ export default function AnalyticsModal({
       );
 
       // Store the generated counts
-      localStorage.setItem(storageKey, JSON.stringify({ viewCounts, shareCounts }));
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({ viewCounts, shareCounts }),
+      );
     }
 
     const data = {
@@ -105,7 +109,11 @@ export default function AnalyticsModal({
   };
 
   if (!chartData) {
-    return <div>Loading...</div>;
+    return (
+      <div>
+        <SkeletonLoader />
+      </div>
+    );
   }
 
   return (

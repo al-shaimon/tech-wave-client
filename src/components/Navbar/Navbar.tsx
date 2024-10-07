@@ -163,12 +163,7 @@ export default function Navbar() {
             >
               {user.role === "admin" && (
                 <>
-                  <li>
-                    <Link href="/admin/dashboard" className="justify-between">
-                      Dashboard
-                    </Link>
-                  </li>
-                  <li>
+                  <li className="my-1">
                     <Link href="/admin/manage-content">
                       <Image
                         src="/manage-posts.svg"
@@ -179,7 +174,7 @@ export default function Navbar() {
                       Manage Posts
                     </Link>
                   </li>
-                  <li>
+                  <li className="my-1">
                     <Link href="/admin/payment-history">
                       <Image
                         src="/payment-history.svg"
@@ -190,7 +185,7 @@ export default function Navbar() {
                       Payment History
                     </Link>
                   </li>
-                  <li>
+                  <li className="my-1">
                     <Link href="/admin/analytics">
                       <Image
                         src="/analytics.svg"
@@ -201,7 +196,7 @@ export default function Navbar() {
                       Analytics
                     </Link>
                   </li>
-                  <li>
+                  <li className="my-1">
                     <Link href="/admin/activity-logs">
                       <Image
                         src="/activity-logs.svg"
@@ -215,15 +210,18 @@ export default function Navbar() {
                 </>
               )}
               {user.role === "user" && (
-                <li className="my-1">
-                  <Link href="/profile" className="justify-between">
+                <li className="my-3">
+                  <Link href="/profile" className="py-2">
+                    <Image
+                      src="/profile.svg"
+                      width={16}
+                      height={16}
+                      alt="Analytics"
+                    />
                     Profile
                   </Link>
                 </li>
               )}
-              {/* <li>
-                <a>Settings</a>
-              </li> */}
               <li>
                 <LogoutButton />
               </li>

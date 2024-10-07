@@ -1,9 +1,10 @@
-"use client"
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { toast } from 'sonner';
-import envConfig from '@/config/envConfig';
-import FeedPost from '../../(home)/[home]/@NewsFeed/FeedPost';
+"use client";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { toast } from "sonner";
+import envConfig from "@/config/envConfig";
+import FeedPost from "../../(home)/[home]/@NewsFeed/FeedPost";
+import SkeletonLoader from "@/components/SkeletonLoader";
 
 interface Post {
   _id: string;
@@ -34,37 +35,41 @@ export default function ManageContentComponent() {
 
   const fetchPosts = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await axios.get(`${envConfig.baseApi}/posts`, {
         headers: { Authorization: `${token}` },
       });
       setPosts(response.data.data);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching posts:', error);
-      toast.error('Failed to load posts.');
+      console.error("Error fetching posts:", error);
+      toast.error("Failed to load posts.");
       setLoading(false);
     }
   };
 
   const handleDeletePost = async (postId: string) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
+    if (window.confirm("Are you sure you want to delete this post?")) {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         await axios.delete(`${envConfig.baseApi}/posts/${postId}/admin`, {
           headers: { Authorization: `${token}` },
         });
-        toast.success('Post deleted successfully');
+        toast.success("Post deleted successfully");
         fetchPosts(); // Refresh the posts list
       } catch (error) {
-        console.error('Error deleting post:', error);
-        toast.error('Failed to delete post');
+        console.error("Error deleting post:", error);
+        toast.error("Failed to delete post");
       }
     }
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div>
+        <SkeletonLoader />
+      </div>
+    );
   }
 
   return (
@@ -77,7 +82,7 @@ export default function ManageContentComponent() {
               ...post,
               user: {
                 ...post.user,
-                username: `@${post.user.email.split('@')[0]}`,
+                username: `@${post.user.email.split("@")[0]}`,
                 isFollowing: false,
               },
               timestamp: post.createdAt,
