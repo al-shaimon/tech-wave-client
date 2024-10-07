@@ -9,6 +9,7 @@ interface User {
   _id: string;
   name: string;
   profilePhoto: string;
+  role: string;
   email: string;
   isVerified: boolean;
   isFollowing: boolean;
@@ -149,6 +150,7 @@ export default function PostList({
                   username: `@${post.user.email.split("@")[0]}`,
                   profilePhoto: post.user.profilePhoto,
                   isVerified: post.user.isVerified,
+                  role: post.user.role,
                   isFollowing: false,
                   _id: post.user._id,
                 },

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -8,6 +8,11 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import axios from "axios";
+import envConfig from "@/config/envConfig";
+import { toast } from "sonner";
+
+
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -23,11 +28,31 @@ const PaymentForm = ({ onSuccess, onClose }: PaymentModalProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+
+  useEffect(() => {
+    const createPaymentIntent = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(
+          `${envConfig.baseApi}/payments/create-payment-intent`,
+          {},
+          { headers: { Authorization: `${token}` } }
+        );
+        setClientSecret(response.data.data.clientSecret);
+      } catch (error) {
+        console.error('Error creating payment intent:', error);
+        toast.error('Failed to initialize payment. Please try again.');
+      }
+    };
+
+    createPaymentIntent();
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe || !elements || !clientSecret) {
       return;
     }
 
@@ -40,18 +65,30 @@ const PaymentForm = ({ onSuccess, onClose }: PaymentModalProps) => {
       return;
     }
 
-    const { error, paymentMethod } = await stripe.createPaymentMethod({
-      type: "card",
-      card: cardElement,
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: cardElement,
+      },
     });
 
     if (error) {
       console.error(error);
+      toast.error('Payment failed. Please try again.');
       setIsProcessing(false);
-    } else {
-      // Here you would typically send the paymentMethod.id to your server
-      // and handle the payment there. For this example, we'll just call onSuccess.
-      onSuccess();
+    } else if (paymentIntent.status === 'succeeded') {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post(
+          `${envConfig.baseApi}/payments/confirm-payment`,
+          { paymentIntentId: paymentIntent.id },
+          { headers: { Authorization: `${token}` } }
+        );
+        localStorage.setItem('isVerified', 'true');
+        onSuccess();
+      } catch (confirmError) {
+        console.error('Error confirming payment:', confirmError);
+        toast.error('Payment succeeded, but verification failed. Please contact support.');
+      }
     }
   };
 

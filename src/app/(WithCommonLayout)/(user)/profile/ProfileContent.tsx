@@ -13,14 +13,11 @@ import { useRouter } from "next/navigation";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import dynamic from "next/dynamic";
 import AnalyticsModal from "@/app/(WithCommonLayout)/(user)/profile/AnalyticsModal";
+import VerificationModal from "./@profile/VerificationModal";
 
 const EditProfileModal = dynamic(() => import("./@profile/EditProfileModal"), {
   ssr: false,
 });
-const VerificationModal = dynamic(
-  () => import("./@profile/VerificationModal"),
-  { ssr: false },
-);
 const UserPosts = dynamic(() => import("./@profile/UserPosts"), { ssr: false });
 const FollowersModal = dynamic(() => import("./@profile/FollowersModal"), {
   ssr: false,
@@ -159,14 +156,38 @@ export default function ProfileContent() {
     }
   };
 
-  const handleVerification = () => {
-    setShowVerificationModal(true);
-  };
-
-  const handleVerificationSuccess = () => {
-    setUser((prevUser) => ({ ...prevUser!, isVerified: true }));
+  const handleVerificationSuccess = async () => {
     setShowVerificationModal(false);
-    toast.success("Your account has been verified!");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
+
+      const response = await axios.get(
+        `${envConfig.baseApi}/auth/${userId}`,
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setUser((prevUser) => ({ ...prevUser!, isVerified: true }));
+        localStorage.setItem("isVerified", "true");
+        toast.success("You are now verified!");
+      }
+
+      // Revalidate the posts tag
+      await fetch("/api/revalidate?tag=posts");
+      // Revalidate the followers and following tags
+      await fetch("/api/revalidate?tag=followers");
+      await fetch("/api/revalidate?tag=following");
+
+      router.refresh(); // Refresh the page to update the profile
+    } catch (error) {
+      console.error("Error updating verification status:", error);
+      toast.error("Failed to update verification status. Please try again.");
+    }
   };
 
   const updateFollowCounts = (
@@ -213,7 +234,7 @@ export default function ProfileContent() {
                 ) : (
                   <button
                     className="ml-2 rounded bg-blue-500 px-2 text-xs text-white md:text-sm"
-                    onClick={handleVerification}
+                    onClick={() => setShowVerificationModal(true)}
                   >
                     Get Verified
                   </button>
@@ -279,9 +300,9 @@ export default function ProfileContent() {
 
       {showVerificationModal && (
         <VerificationModal
+          isOpen={showVerificationModal}
           onClose={() => setShowVerificationModal(false)}
           onSuccess={handleVerificationSuccess}
-          userId={user.id}
         />
       )}
 

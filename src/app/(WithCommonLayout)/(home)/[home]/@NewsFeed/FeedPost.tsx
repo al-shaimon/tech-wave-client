@@ -36,6 +36,7 @@ interface Post {
     username?: string;
     email?: string;
     name: string;
+    role?: string;
     isVerified: boolean;
     isFollowing: boolean;
   };
@@ -173,6 +174,7 @@ export default function FeedPost({
     console.error("Error parsing timestamp:", error);
     timeAgo = "Invalid date";
   }
+
 
   const username2 = `@${post.user.email?.split("@")[0] || "unknown"}`;
   const username = `${post.user.username || username2}`;
@@ -369,7 +371,7 @@ export default function FeedPost({
     toast.success(
       "Payment successful! You are now verified and can view all paid posts.",
     );
-    // Update user's verification status on the server
+    
     const token = localStorage.getItem("token");
     if (token) {
       try {
@@ -377,9 +379,8 @@ export default function FeedPost({
         setUserId(decodedToken.id);
         setIsPostOwner(decodedToken.id === post.user._id);
 
-        const response = await axios.post(
-          `${envConfig.baseApi}/auth/update-profile`,
-          { isVerified: true },
+        const response = await axios.get(
+          `${envConfig.baseApi}/auth/${decodedToken.id}`,
           {
             headers: {
               Authorization: `${token}`,
@@ -388,17 +389,19 @@ export default function FeedPost({
         );
 
         setIsUserVerified(response.data.data.isVerified);
-        localStorage.setItem("isVerified", true.toString());
+        localStorage.setItem("isVerified", response.data.data.isVerified.toString());
+        
         // Revalidate the posts tag
         await fetch("/api/revalidate?tag=posts");
 
         router.refresh(); // Refresh the page to update the newsfeed
-        window.location.reload();
       } catch (error) {
         console.error("Error checking user status:", error);
       }
     }
   };
+
+  console.log("ADMIIIIIIIIIIIIIIIIN", post);
 
   return (
     <>
@@ -483,23 +486,25 @@ export default function FeedPost({
                       tabIndex={0}
                       className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-200 p-4 shadow"
                     >
-                      {userId && userId !== post.user._id && !hideFollowButton && (
-                        <li className="my-1">
-                          <button onClick={handleFollowUnfollow}>
-                            <Image
-                              src={isFollowing ? "/remove.svg" : "/add.svg"}
-                              width={16}
-                              height={16}
-                              alt={
-                                isFollowing ? "unfollow icon" : "follow icon"
-                              }
-                            />
-                            {isFollowing
-                              ? `Unfollow ${post.user.name}`
-                              : `Follow ${post.user.name}`}
-                          </button>
-                        </li>
-                      )}
+                      {userId &&
+                        userId !== post.user._id &&
+                        !hideFollowButton && (
+                          <li className="my-1">
+                            <button onClick={handleFollowUnfollow}>
+                              <Image
+                                src={isFollowing ? "/remove.svg" : "/add.svg"}
+                                width={16}
+                                height={16}
+                                alt={
+                                  isFollowing ? "unfollow icon" : "follow icon"
+                                }
+                              />
+                              {isFollowing
+                                ? `Unfollow ${post.user.name}`
+                                : `Follow ${post.user.name}`}
+                            </button>
+                          </li>
+                        )}
                       {(isProfilePage || isAdminView) && (
                         <li className="my-1">
                           <button onClick={onDelete}>

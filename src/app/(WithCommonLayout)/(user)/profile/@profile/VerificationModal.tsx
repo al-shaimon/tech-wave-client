@@ -1,33 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import {
-  Elements,
-  CardElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
 import axios from "axios";
+import { toast } from "sonner";
 import envConfig from "@/config/envConfig";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface VerificationModalProps {
+  isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  userId: string;
 }
 
 const PaymentForm = ({ onSuccess, onClose }: VerificationModalProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+
+  useEffect(() => {
+    const createPaymentIntent = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(
+          `${envConfig.baseApi}/payments/create-payment-intent`,
+          {},
+          { headers: { Authorization: `${token}` } }
+        );
+        setClientSecret(response.data.data.clientSecret);
+      } catch (error) {
+        console.error('Error creating payment intent:', error);
+        toast.error('Failed to initialize payment. Please try again.');
+      }
+    };
+
+    createPaymentIntent();
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe || !elements || !clientSecret) {
       return;
     }
 
@@ -40,41 +54,33 @@ const PaymentForm = ({ onSuccess, onClose }: VerificationModalProps) => {
       return;
     }
 
-    const { error } = await stripe.createPaymentMethod({
-      type: "card",
-      card: cardElement,
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: cardElement,
+      },
     });
 
     if (error) {
       console.error(error);
+      toast.error('Payment failed. Please try again.');
       setIsProcessing(false);
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
-
-      const response = await axios.post(
-        `${envConfig.baseApi}/auth/update-profile`,
-        { isVerified: true },
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        },
-      );
-
-      if (response.data.success) {
+    } else if (paymentIntent.status === 'succeeded') {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post(
+          `${envConfig.baseApi}/payments/confirm-payment`,
+          { paymentIntentId: paymentIntent.id },
+          { headers: { Authorization: `${token}` } }
+        );
+        localStorage.setItem('isVerified', 'true');
         onSuccess();
-      } else {
-        console.error("Failed to update verification status");
+        toast.success('Payment successful! You are now verified.');
+      } catch (confirmError) {
+        console.error('Error confirming payment:', confirmError);
+        toast.error('Payment succeeded, but verification failed. Please contact support.');
       }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-    } finally {
-      setIsProcessing(false);
     }
+    setIsProcessing(false);
   };
 
   return (
@@ -115,25 +121,16 @@ const PaymentForm = ({ onSuccess, onClose }: VerificationModalProps) => {
   );
 };
 
-export default function VerificationModal({
-  onClose,
-  onSuccess,
-  userId,
-}: VerificationModalProps) {
+export default function VerificationModal({ isOpen, onClose, onSuccess }: VerificationModalProps) {
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black bg-opacity-50 transition-opacity">
-      <div className="mx-4 w-full max-w-md rounded-lg bg-base-300 p-6 md:mx-0">
-        <h2 className="mb-4 text-center text-2xl font-bold">Get Verified</h2>
-        <p className="mb-4">
-          Pay <span className="font-bold text-primary">$20</span> to get a blue
-          verification badge for your account.
-        </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="w-full max-w-md rounded-lg bg-base-300 p-6">
+        <h2 className="mb-4 text-2xl font-bold">Get Verified</h2>
+        <p className="mb-4">Pay $20 to get verified and unlock all premium features.</p>
         <Elements stripe={stripePromise}>
-          <PaymentForm
-            onSuccess={onSuccess}
-            onClose={onClose}
-            userId={userId}
-          />
+          <PaymentForm onSuccess={onSuccess} onClose={onClose} isOpen={isOpen} />
         </Elements>
       </div>
     </div>
