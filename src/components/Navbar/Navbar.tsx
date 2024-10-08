@@ -164,6 +164,17 @@ export default function Navbar() {
               {user.role === "admin" && (
                 <>
                   <li className="my-1">
+                    <Link href="/admin/manage-users">
+                      <Image
+                        src="/manage-users.svg"
+                        width={20}
+                        height={20}
+                        alt="Manage Users"
+                      />
+                      Manage Users
+                    </Link>
+                  </li>
+                  <li className="my-1">
                     <Link href="/admin/manage-content">
                       <Image
                         src="/manage-posts.svg"
