@@ -50,7 +50,7 @@ export default function NewsFeedPage() {
   if (!postsData || !categoriesData)
     return (
       <div>
-        {/* <SkeletonLoader /> */}
+        <SkeletonLoader />
       </div>
     );
 
