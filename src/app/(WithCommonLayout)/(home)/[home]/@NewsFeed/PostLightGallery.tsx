@@ -19,7 +19,7 @@ interface PostLightGalleryProps {
 export default function PostLightGallery({ images }: PostLightGalleryProps) {
   return (
     <LightGallery
-      elementClassNames={`mt-2 ${
+      elementClassNames={`z-[9999] mt-2 ${
         images.length === 1 ? "w-full" : "grid grid-cols-1 gap-2 sm:grid-cols-2"
       }`}
       speed={500}

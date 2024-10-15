@@ -403,7 +403,7 @@ export default function FeedPost({
     }
   };
 
-  console.log("ADMIIIIIIIIIIIIIIIIN", post);
+  // console.log("ADMIIIIIIIIIIIIIIIIN", post);
 
   return (
     <>
@@ -512,6 +512,21 @@ export default function FeedPost({
                             </button>
                           </li>
                         )}
+                      {isProfilePage && userId && userId === post.user._id && (
+                        <>
+                          <li className="my-1">
+                            <button onClick={onEdit}>
+                              <Image
+                                src="/edit.svg"
+                                width={16}
+                                height={16}
+                                alt="edit icon"
+                              />
+                              Edit Post
+                            </button>
+                          </li>
+                        </>
+                      )}
                       {(isProfilePage || isAdminView) && (
                         <li className="my-1">
                           <button onClick={onDelete}>
@@ -574,7 +589,9 @@ export default function FeedPost({
                   commentsCount={
                     typeof post.comments === "number"
                       ? post.comments
-                      : post.comments.length
+                      : Array.isArray(post.comments)
+                        ? post.comments.length
+                        : 0
                   }
                 />
               </div>
