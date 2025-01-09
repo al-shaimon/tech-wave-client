@@ -13,7 +13,6 @@ export default function LogoutButton({ onClick }: LogoutButtonProps) {
 
   const handleLogout = async () => {
     try {
-      // Send POST request to the /api/logout route
       const response = await fetch("/api/logout", {
         method: "POST",
       });
@@ -29,19 +28,17 @@ export default function LogoutButton({ onClick }: LogoutButtonProps) {
         window.location.href = "/login";
         router.refresh();
       } else {
-        console.error("Failed to log out");
         toast.error("Failed to log out");
       }
-    } catch (error) {
-      console.error("Error during logout:", error);
+    } catch {
       toast.error("Error during logout");
     }
   };
 
   return (
     <button
-      onClick={(e) => {
-        handleLogout(e);
+      onClick={() => {
+        handleLogout();
         onClick?.();
       }}
       className="btn bg-error text-white"

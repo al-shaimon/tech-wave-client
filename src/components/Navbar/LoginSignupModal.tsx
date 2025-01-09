@@ -33,6 +33,17 @@ interface ForgotPasswordInput {
   email: string;
 }
 
+const demoCredentials = {
+  user: {
+    email: "user@gmail.com",
+    password: "user123",
+  },
+  admin: {
+    email: "admin@gmail.com",
+    password: "admin123",
+  },
+};
+
 export default function LoginSignupModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
@@ -171,6 +182,12 @@ export default function LoginSignupModal() {
     }
   };
 
+  // Add this function to handle demo login
+  const handleDemoLogin = (type: "user" | "admin") => {
+    loginForm.setValue("email", demoCredentials[type].email);
+    loginForm.setValue("password", demoCredentials[type].password);
+  };
+
   return (
     <>
       <button
@@ -205,6 +222,25 @@ export default function LoginSignupModal() {
                   ? "Login"
                   : "Sign Up"}
             </h3>
+
+            {isLogin && !isForgotPassword && (
+              <div className="mt-4 flex justify-center gap-4">
+                <button
+                  onClick={() => handleDemoLogin("user")}
+                  className="btn btn-outline btn-sm"
+                  type="button"
+                >
+                  Demo User
+                </button>
+                <button
+                  onClick={() => handleDemoLogin("admin")}
+                  className="btn btn-outline btn-sm"
+                  type="button"
+                >
+                  Demo Admin
+                </button>
+              </div>
+            )}
 
             {errorMessage && (
               <p className="mt-2 text-center text-red-500">{errorMessage}</p>
