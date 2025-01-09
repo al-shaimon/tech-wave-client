@@ -80,7 +80,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="navbar my-2 border-b border-grey">
+    <div className="navbar my-2">
       <div className="navbar-start">
         <div className="dropdown">
           <label tabIndex={0} className="btn btn-ghost" onClick={toggleMenu}>
@@ -114,7 +114,7 @@ export default function Navbar() {
           )}
         </div>
         <button onClick={handleHome} className="lg:hidden">
-          <Image src="/l.png" width={150} height={50} alt="TechWave" />
+          <Image src="/l.png" width={50} height={50} alt="TechWave" />
         </button>
         <button onClick={handleHome} className="hidden lg:block">
           <Image src="/l3.png" width={150} height={50} alt="TechWave" />

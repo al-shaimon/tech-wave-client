@@ -32,14 +32,9 @@ export function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
   } else {
-    // If there's no token and the user is trying to access protected routes, redirect to login
-    const isProtectedRoute =
-      req.nextUrl.pathname.startsWith("/profile") ||
-      req.nextUrl.pathname.startsWith("/post") ||
-      req.nextUrl.pathname.startsWith("/admin");
-
-    if (isProtectedRoute) {
-      return NextResponse.redirect(new URL("/login", req.url)); //
+    // If there's no token, redirect to login for all routes except public routes
+    if (!isAuthPage) {
+      return NextResponse.redirect(new URL("/login", req.url));
     }
   }
 
@@ -48,6 +43,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/profile/:path*",
     "/post/:path*",
     "/admin/:path*",

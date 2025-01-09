@@ -407,7 +407,7 @@ export default function FeedPost({
 
   return (
     <>
-      <div className="relative mb-4 w-full rounded-lg border-grey bg-base-100 py-4 shadow-2xl md:border md:p-4">
+      <div className="relative pb-8 w-full border-[#26282a] bg-base-100 pt-4 md:border-b md:p-4">
         {post.isPaid &&
           !isUserVerified &&
           !isPostOwner &&

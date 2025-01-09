@@ -21,6 +21,17 @@ interface LoginFormInput {
   password: string;
 }
 
+const demoCredentials = {
+  user: {
+    email: "user@gmail.com",
+    password: "user123",
+  },
+  admin: {
+    email: "admin@gmail.com",
+    password: "admin123",
+  },
+};
+
 export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -81,6 +92,11 @@ export default function LoginPage() {
     }
   };
 
+  const handleDemoLogin = (type: "user" | "admin") => {
+    loginForm.setValue("email", demoCredentials[type].email);
+    loginForm.setValue("password", demoCredentials[type].password);
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-md rounded-lg bg-base-300 p-6 shadow-md">
@@ -88,6 +104,23 @@ export default function LoginPage() {
           <Image src="/l3.png" width={200} height={100} alt="logo" />
         </div>
         <h2 className="mt-4 text-center text-2xl font-bold">Login</h2>
+
+        <div className="mt-4 flex justify-center gap-4">
+          <button
+            onClick={() => handleDemoLogin("user")}
+            className="btn btn-outline btn-sm"
+            type="button"
+          >
+            Demo User
+          </button>
+          <button
+            onClick={() => handleDemoLogin("admin")}
+            className="btn btn-outline btn-sm"
+            type="button"
+          >
+            Demo Admin
+          </button>
+        </div>
 
         {errorMessage && (
           <p className="mt-2 text-center text-red-500">{errorMessage}</p>

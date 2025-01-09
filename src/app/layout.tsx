@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en" data-theme="dark">
       <body className={poppins.className}>
         <UserProvider>
-          <div className="mx-auto max-w-screen-lg rounded-md border-grey md:border">
+          <div className="container mx-auto">
             {children}
             <Toaster />
           </div>
