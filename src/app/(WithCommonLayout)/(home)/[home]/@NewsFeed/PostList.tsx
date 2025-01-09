@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import FeedPost from "./FeedPost";
+import { jwtDecode } from "jwt-decode";
 
 interface User {
   _id: string;
@@ -35,6 +36,7 @@ interface PostListProps {
   initialPosts: PostData[];
   sortBy: string;
   selectedCategory: string;
+  selectedFilter: string;
   showInfiniteScroll: boolean;
 }
 
@@ -42,6 +44,7 @@ export default function PostList({
   initialPosts,
   sortBy,
   selectedCategory,
+  selectedFilter,
   showInfiniteScroll,
 }: PostListProps) {
   const [visiblePosts, setVisiblePosts] = useState<PostData[]>([]);
@@ -50,23 +53,50 @@ export default function PostList({
   const loaderRef = useRef(null);
   const postsPerPage = 10;
   const allPosts = useRef<PostData[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decoded: { id: string } = jwtDecode(token);
+      setCurrentUserId(decoded.id);
+    }
+  }, []);
 
   // Initialize filtered and sorted posts
   useEffect(() => {
     let filtered = initialPosts;
 
+    // Apply category filter
     if (selectedCategory !== "all") {
-      filtered = initialPosts.filter(
+      filtered = filtered.filter(
         (post) => post.category._id === selectedCategory,
       );
     }
 
+    // Apply additional filters
+    if (selectedFilter === "following") {
+      filtered = filtered.filter((post) => post.user.isFollowing);
+    } else if (selectedFilter === "premium") {
+      filtered = filtered.filter((post) => post.isPaid);
+    }
+
+    // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
       if (sortBy === "votes") {
         return b.votes - a.votes;
       } else if (sortBy === "latest") {
         return (
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      } else if (sortBy === "oldest") {
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      } else if (sortBy === "most-commented") {
+        return (
+          (typeof b.comments === "number" ? b.comments : b.comments.length) -
+          (typeof a.comments === "number" ? a.comments : a.comments.length)
         );
       }
       return 0;
@@ -75,7 +105,7 @@ export default function PostList({
     allPosts.current = sorted;
     setVisiblePosts(sorted.slice(0, postsPerPage));
     setPage(1);
-  }, [initialPosts, sortBy, selectedCategory]);
+  }, [initialPosts, sortBy, selectedCategory, selectedFilter]);
 
   // Function to get next batch of posts
   const getMorePosts = useCallback(() => {
@@ -129,36 +159,49 @@ export default function PostList({
 
   return (
     <div>
-      {visiblePosts.map((post) => (
-        <FeedPost
-          key={`${post._id}-${Math.random()}`} // Ensure unique key when posts repeat
-          post={{
-            ...post,
-            user: {
-              name: post.user.name,
-              username: `@${post.user.email.split("@")[0]}`,
-              profilePhoto: post.user.profilePhoto,
-              isVerified: post.user.isVerified,
-              role: post.user.role,
-              isFollowing: false,
-              _id: post.user._id,
-            },
-            content: post.content,
-            images: post.images,
-            videos: post.videos,
-            timestamp: post.createdAt,
-            votes: post.votes,
-            comments: post.comments.length || post.commentCount || 0,
-            isPaid: post.isPaid,
-            category: post.category.name,
-          }}
-        />
-      ))}
+      {visiblePosts.length === 0 ? (
+        <div className="flex min-h-[200px] items-center justify-center rounded-lg bg-base-200 p-8 text-center">
+          <div>
+            <h3 className="mb-2 text-xl font-semibold">No posts found</h3>
+            <p className="text-gray-500">
+              Try adjusting your filters or check back later for new posts.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {visiblePosts.map((post) => (
+            <FeedPost
+              key={`${post._id}-${Math.random()}`}
+              post={{
+                ...post,
+                user: {
+                  name: post.user.name,
+                  username: `@${post.user.email.split("@")[0]}`,
+                  profilePhoto: post.user.profilePhoto,
+                  isVerified: post.user.isVerified,
+                  role: post.user.role,
+                  isFollowing: false,
+                  _id: post.user._id,
+                },
+                content: post.content,
+                images: post.images,
+                videos: post.videos,
+                timestamp: post.createdAt,
+                votes: post.votes,
+                comments: post.comments.length || post.commentCount || 0,
+                isPaid: post.isPaid,
+                category: post.category.name,
+              }}
+            />
+          ))}
 
-      {/* Loader reference element */}
-      <div ref={loaderRef} className="h-10 w-full">
-        {loading && <SkeletonLoader />}
-      </div>
+          {/* Loader reference element */}
+          <div ref={loaderRef} className="h-10 w-full">
+            {loading && <SkeletonLoader />}
+          </div>
+        </>
+      )}
     </div>
   );
 }

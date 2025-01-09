@@ -89,7 +89,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="navbar my-2">
+    <div className="container navbar fixed left-0 right-0 top-0 z-50 mx-auto my-0 bg-base-100/80 backdrop-blur-md">
       <div className="navbar-start">
         <div className="dropdown md:hidden">
           <label tabIndex={0} className="btn btn-ghost" onClick={toggleMenu}>

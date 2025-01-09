@@ -1,10 +1,14 @@
 import Navbar from "@/components/Navbar/Navbar";
 
-export default function layout({ children }: { children: React.ReactNode }) {
+export default function WithCommonLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div className="">
+    <div>
       <Navbar />
-      <main>{children}</main>
+      <main className="min-h-screen pt-20">{children}</main>
     </div>
   );
 }
