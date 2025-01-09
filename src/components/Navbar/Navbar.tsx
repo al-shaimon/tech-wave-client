@@ -2,7 +2,6 @@
 "use client"; // Ensures the component is client-side
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import LoginSignupModal from "./LoginSignupModal"; // Import the modal
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode"; // Corrected import
 import LogoutButton from "./LogoutButton";
@@ -192,6 +191,21 @@ export default function Navbar() {
                   <>
                     <li className="my-1">
                       <Link
+                        href="/admin/dashboard"
+                        className="py-2"
+                        onClick={handleMenuItemClick}
+                      >
+                        <Image
+                          src="/dashboard.svg"
+                          width={20}
+                          height={20}
+                          alt="Dashboard"
+                        />
+                        Dashboard
+                      </Link>
+                    </li>
+                    <li className="my-1">
+                      <Link
                         href="/admin/manage-users"
                         onClick={handleMenuItemClick}
                       >
@@ -286,9 +300,7 @@ export default function Navbar() {
             )}
           </div>
         ) : (
-          <div>
-            <LoginSignupModal />
-          </div>
+          <div>{/* <LoginSignupModal /> */}</div>
         )}
       </div>
     </div>
