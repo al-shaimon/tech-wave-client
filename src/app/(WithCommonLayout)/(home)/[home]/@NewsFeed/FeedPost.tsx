@@ -104,14 +104,15 @@ export default function FeedPost({
 
   useEffect(() => {
     const fetchFollowStatus = async () => {
-      if (userId === post.user._id) {
+      if (!userId || userId === post.user._id) {
         setIsLoading(false);
         return;
       }
 
-      setIsLoading(true);
       try {
         const token = localStorage.getItem("token");
+        if (!token) return;
+
         const response = await axios.get(
           `${envConfig.baseApi}/auth/followers-following/${post.user._id}`,
           {
@@ -123,14 +124,14 @@ export default function FeedPost({
           setIsFollowing(response.data.data.isFollowing);
         }
 
-        const data = await axios.get(`${envConfig.baseApi}/auth/${userId}`, {
-          headers: { Authorization: `${token}` },
-        });
-        setIsUserVerified(data.data.data.isVerified);
-        // Revalidate the posts tag
-        await fetch("/api/revalidate?tag=posts");
+        const userData = await axios.get(
+          `${envConfig.baseApi}/auth/${userId}`,
+          {
+            headers: { Authorization: `${token}` },
+          },
+        );
 
-        router.refresh(); // Refresh the page to update the newsfeed
+        setIsUserVerified(userData.data.data.isVerified);
       } catch (error) {
         console.error("Error fetching follow status:", error);
       } finally {
@@ -139,7 +140,7 @@ export default function FeedPost({
     };
 
     fetchFollowStatus();
-  }, [post.user._id, router, userId]);
+  }, [post.user._id, userId]);
 
   try {
     const postDate = new Date(post.timestamp || post.createdAt || "");
@@ -407,7 +408,7 @@ export default function FeedPost({
 
   return (
     <>
-      <div className="relative pb-8 w-full border-[#26282a] bg-base-100 pt-4 md:border-b md:p-4">
+      <div className="relative w-full border-[#26282a] bg-base-100 pb-8 pt-4 md:border-b md:p-4">
         {post.isPaid &&
           !isUserVerified &&
           !isPostOwner &&

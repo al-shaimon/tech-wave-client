@@ -162,14 +162,11 @@ export default function ProfileContent() {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
 
-      const response = await axios.get(
-        `${envConfig.baseApi}/auth/${userId}`,
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        }
-      );
+      const response = await axios.get(`${envConfig.baseApi}/auth/${userId}`, {
+        headers: {
+          Authorization: `${token}`,
+        },
+      });
 
       if (response.data.success) {
         setUser((prevUser) => ({ ...prevUser!, isVerified: true }));
@@ -248,13 +245,13 @@ export default function ProfileContent() {
 
           <div className="mt-2 flex w-full gap-1 md:mt-0 md:w-auto md:flex-row">
             <button
-              className="btn btn-sm mr-2 w-1/2 rounded border border-gray-300 px-4 py-2 text-xs text-white md:btn-md hover:bg-base-300 md:w-auto md:text-base"
+              className="btn btn-sm mr-2 w-1/2 rounded border border-gray-500 px-4 py-2 text-xs text-white md:btn-md hover:bg-base-300 md:w-auto md:text-base"
               onClick={() => setShowEditModal(true)}
             >
               Edit Profile
             </button>
             <button
-              className="btn btn-sm mr-2 w-1/2 rounded border border-gray-300 px-4 py-2 text-xs text-white md:btn-md hover:bg-base-300 md:w-auto md:text-base"
+              className="btn btn-sm mr-2 w-1/2 rounded border border-gray-500 px-4 py-2 text-xs text-white md:btn-md hover:bg-base-300 md:w-auto md:text-base"
               onClick={() => setShowAnalyticsModal(true)}
             >
               View Analytics
@@ -323,7 +320,7 @@ export default function ProfileContent() {
       )}
 
       {user && (
-        <div className="mt-8 border-t border-grey">
+        <div className="mt-8 border-t border-[#26282a]">
           <UserPosts userId={user.id} />
         </div>
       )}

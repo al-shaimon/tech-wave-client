@@ -6,7 +6,7 @@ export default function SkeletonLoader() {
         .map((_, i) => (
           <div
             key={i}
-            className="flex animate-pulse space-x-4 border-b border-gray-200 p-4"
+            className="flex animate-pulse space-x-4 border-b border-[#26282a] p-4"
           >
             <div className="h-12 w-12 rounded-full bg-gray-200"></div>
             <div className="flex-1 space-y-4 py-1">

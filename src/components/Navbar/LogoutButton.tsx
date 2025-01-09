@@ -4,7 +4,11 @@ import { clearAnalyticsData } from "@/utils/utilts";
 import { useRouter } from "next/navigation"; // from 'next/navigation' in App Router
 import { toast } from "sonner";
 
-export default function LogoutButton() {
+interface LogoutButtonProps {
+  onClick?: () => void;
+}
+
+export default function LogoutButton({ onClick }: LogoutButtonProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -35,7 +39,13 @@ export default function LogoutButton() {
   };
 
   return (
-    <button onClick={handleLogout} className="btn bg-error text-white">
+    <button
+      onClick={(e) => {
+        handleLogout(e);
+        onClick?.();
+      }}
+      className="btn bg-error text-white"
+    >
       Logout
     </button>
   );

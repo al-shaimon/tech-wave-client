@@ -24,6 +24,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const router = useRouter();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -47,6 +48,10 @@ export default function Navbar() {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleSideMenuClick = () => {
+    setIsMenuOpen(false);
   };
 
   const debouncedSearch = useCallback(
@@ -79,10 +84,14 @@ export default function Navbar() {
     setSearchResults([]);
   };
 
+  const handleMenuItemClick = () => {
+    setIsDropdownOpen(false);
+  };
+
   return (
     <div className="navbar my-2">
       <div className="navbar-start">
-        <div className="dropdown">
+        <div className="dropdown md:hidden">
           <label tabIndex={0} className="btn btn-ghost" onClick={toggleMenu}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -105,14 +114,19 @@ export default function Navbar() {
               className="menu dropdown-content menu-sm z-[999] mt-3 w-52 rounded-box bg-base-100 p-2 shadow"
             >
               <li>
-                <Link href="/about">About Us</Link>
+                <Link href="/about" onClick={handleSideMenuClick}>
+                  About Us
+                </Link>
               </li>
               <li>
-                <Link href="/contact">Contact Us</Link>
+                <Link href="/contact" onClick={handleSideMenuClick}>
+                  Contact Us
+                </Link>
               </li>
             </ul>
           )}
         </div>
+
         <button onClick={handleHome} className="lg:hidden">
           <Image src="/l.png" width={50} height={50} alt="TechWave" />
         </button>
@@ -140,12 +154,24 @@ export default function Navbar() {
       </div>
 
       <div className="navbar-end">
+        <div className="hidden md:mr-4 md:flex md:items-center md:gap-2">
+          <Link href="/about" className="btn btn-ghost btn-sm normal-case">
+            <Image src="/about.svg" width={20} height={20} alt="About" />
+            About Us
+          </Link>
+          <Link href="/contact" className="btn btn-ghost btn-sm normal-case">
+            <Image src="/contact.svg" width={20} height={20} alt="Contact" />
+            Contact Us
+          </Link>
+        </div>
+
         {user ? (
           <div className="dropdown dropdown-end">
             <div
               tabIndex={0}
               role="button"
               className="avatar btn btn-circle btn-ghost"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <div className="w-10 rounded-full">
                 <Image
@@ -157,86 +183,107 @@ export default function Navbar() {
                 />
               </div>
             </div>
-            <ul
-              tabIndex={0}
-              className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-100 p-2 shadow"
-            >
-              {user.role === "admin" && (
-                <>
-                  <li className="my-1">
-                    <Link href="/admin/manage-users">
+            {isDropdownOpen && (
+              <ul
+                tabIndex={0}
+                className="menu dropdown-content menu-sm z-[99] mt-3 w-52 rounded-box bg-base-100 p-2 shadow"
+              >
+                {user.role === "admin" && (
+                  <>
+                    <li className="my-1">
+                      <Link
+                        href="/admin/manage-users"
+                        onClick={handleMenuItemClick}
+                      >
+                        <Image
+                          src="/manage-users.svg"
+                          width={20}
+                          height={20}
+                          alt="Manage Users"
+                        />
+                        Manage Users
+                      </Link>
+                    </li>
+                    <li className="my-1">
+                      <Link
+                        href="/admin/manage-content"
+                        onClick={handleMenuItemClick}
+                      >
+                        <Image
+                          src="/manage-posts.svg"
+                          width={20}
+                          height={20}
+                          alt="Manage Posts"
+                        />
+                        Manage Posts
+                      </Link>
+                    </li>
+                    <li className="my-1">
+                      <Link
+                        href="/admin/payment-history"
+                        onClick={handleMenuItemClick}
+                      >
+                        <Image
+                          src="/payment-history.svg"
+                          width={20}
+                          height={20}
+                          alt="Payment History"
+                        />
+                        Payment History
+                      </Link>
+                    </li>
+                    <li className="my-1">
+                      <Link
+                        href="/admin/analytics"
+                        onClick={handleMenuItemClick}
+                      >
+                        <Image
+                          src="/analytics.svg"
+                          width={20}
+                          height={20}
+                          alt="Analytics"
+                        />
+                        Analytics
+                      </Link>
+                    </li>
+                    <li className="my-1">
+                      <Link
+                        href="/admin/activity-logs"
+                        onClick={handleMenuItemClick}
+                      >
+                        <Image
+                          src="/activity-logs.svg"
+                          width={20}
+                          height={20}
+                          alt="Activity Logs"
+                        />
+                        Activity Logs
+                      </Link>
+                    </li>
+                  </>
+                )}
+                {user.role === "user" && (
+                  <li className="my-3">
+                    <Link
+                      href="/profile"
+                      className="py-2"
+                      onClick={handleMenuItemClick}
+                    >
                       <Image
-                        src="/manage-users.svg"
-                        width={20}
-                        height={20}
-                        alt="Manage Users"
-                      />
-                      Manage Users
-                    </Link>
-                  </li>
-                  <li className="my-1">
-                    <Link href="/admin/manage-content">
-                      <Image
-                        src="/manage-posts.svg"
-                        width={20}
-                        height={20}
-                        alt="Manage Posts"
-                      />
-                      Manage Posts
-                    </Link>
-                  </li>
-                  <li className="my-1">
-                    <Link href="/admin/payment-history">
-                      <Image
-                        src="/payment-history.svg"
-                        width={20}
-                        height={20}
-                        alt="Payment History"
-                      />
-                      Payment History
-                    </Link>
-                  </li>
-                  <li className="my-1">
-                    <Link href="/admin/analytics">
-                      <Image
-                        src="/analytics.svg"
-                        width={20}
-                        height={20}
+                        src="/profile.svg"
+                        width={16}
+                        height={16}
                         alt="Analytics"
                       />
-                      Analytics
+                      Profile
                     </Link>
                   </li>
-                  <li className="my-1">
-                    <Link href="/admin/activity-logs">
-                      <Image
-                        src="/activity-logs.svg"
-                        width={20}
-                        height={20}
-                        alt="Activity Logs"
-                      />
-                      Activity Logs
-                    </Link>
-                  </li>
-                </>
-              )}
-              {user.role === "user" && (
-                <li className="my-3">
-                  <Link href="/profile" className="py-2">
-                    <Image
-                      src="/profile.svg"
-                      width={16}
-                      height={16}
-                      alt="Analytics"
-                    />
-                    Profile
-                  </Link>
+                )}
+                <li>
+                  <LogoutButton onClick={handleMenuItemClick} />
                 </li>
-              )}
-              <li>
-                <LogoutButton />
-              </li>
-            </ul>
+              </ul>
+            )}
           </div>
         ) : (
           <div>

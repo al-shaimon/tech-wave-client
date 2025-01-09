@@ -20,12 +20,16 @@ export default function NewsFeedPage() {
     error: postsError,
     mutate,
   } = useSWR(`${envConfig.baseApi}/posts`, fetcher, {
-    refreshInterval: 60000, // Refresh every 60 seconds
+    revalidateOnFocus: false,
+    dedupingInterval: 60000, // Dedupe requests within 1 minute
   });
 
   const { data: categoriesData, error: categoriesError } = useSWR(
     `${envConfig.baseApi}/post-categories`,
     fetcher,
+    {
+      revalidateOnFocus: false,
+    },
   );
 
   useEffect(() => {
@@ -35,30 +39,30 @@ export default function NewsFeedPage() {
   }, [categoriesData]);
 
   useEffect(() => {
-    // Listen for new post events
+    if (!postsData?.data) return;
+
     const eventSource = new EventSource(`${envConfig.baseApi}/posts/events`);
+
     eventSource.onmessage = (event) => {
-      mutate(); // Revalidate the data when a new post is created
+      const eventData = JSON.parse(event.data);
+      if (eventData.type === "post_updated") {
+        mutate();
+      }
     };
 
     return () => {
       eventSource.close();
     };
-  }, [mutate]);
+  }, [mutate, postsData]);
 
   if (postsError || categoriesError) return <div>Failed to load data</div>;
-  if (!postsData || !categoriesData)
-    return (
-      <div>
-        <SkeletonLoader />
-      </div>
-    );
+  if (!postsData || !categoriesData) return <SkeletonLoader />;
 
   // Determine if we should show infinite scroll based on sorting and filtering
   const showInfiniteScroll = sortBy === "latest" && selectedCategory === "all";
 
   return (
-    <div className="my-2 border-t border-grey p-1 md:p-4">
+    <div className="my-2 border-t border-[#26282a] p-1 md:p-4">
       <div className="mb-4 flex items-center gap-x-3 md:flex-wrap">
         <div className="mb-2 mt-2 w-full sm:mb-0 sm:w-auto md:mt-0">
           <select

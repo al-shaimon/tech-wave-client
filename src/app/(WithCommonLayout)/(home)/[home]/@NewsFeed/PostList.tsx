@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import SkeletonLoader from "@/components/SkeletonLoader";
 import FeedPost from "./FeedPost";
-import InfiniteScroll from "react-infinite-scroll-component";
 
 interface User {
   _id: string;
@@ -45,128 +44,121 @@ export default function PostList({
   selectedCategory,
   showInfiniteScroll,
 }: PostListProps) {
-  const [postsData, setPostsData] = useState<PostData[]>(initialPosts);
   const [visiblePosts, setVisiblePosts] = useState<PostData[]>([]);
-  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const loaderRef = useRef(null);
+  const postsPerPage = 10;
+  const allPosts = useRef<PostData[]>([]);
 
-  // Shuffle posts for infinite scroll
-  const shuffleArray = (array: PostData[]) => {
-    return array.sort(() => Math.random() - 0.5);
-  };
-
+  // Initialize filtered and sorted posts
   useEffect(() => {
-    setVisiblePosts([]);
-    setHasMore(true);
-    const filterAndSortPosts = () => {
-      let filtered = initialPosts;
+    let filtered = initialPosts;
 
-      if (selectedCategory !== "all") {
-        filtered = initialPosts.filter(
-          (post) => post.category._id === selectedCategory,
+    if (selectedCategory !== "all") {
+      filtered = initialPosts.filter(
+        (post) => post.category._id === selectedCategory,
+      );
+    }
+
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortBy === "votes") {
+        return b.votes - a.votes;
+      } else if (sortBy === "latest") {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
       }
+      return 0;
+    });
 
-      const sorted = [...filtered].sort((a, b) => {
-        if (sortBy === "votes") {
-          return b.votes - a.votes;
-        } else if (sortBy === "latest") {
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-        }
-        return 0;
-      });
-
-      setVisiblePosts(sorted.slice(0, 50));
-      setHasMore(sorted.length > 1);
-    };
-
-    filterAndSortPosts();
+    allPosts.current = sorted;
+    setVisiblePosts(sorted.slice(0, postsPerPage));
+    setPage(1);
   }, [initialPosts, sortBy, selectedCategory]);
 
-  const fetchMorePosts = () => {
+  // Function to get next batch of posts
+  const getMorePosts = useCallback(() => {
+    if (loading) return;
+
     setLoading(true);
+    const startIndex = page * postsPerPage;
+    let newPosts: PostData[] = [];
 
-    const shuffledPosts = shuffleArray(postsData);
+    // If we've shown all posts, start over from the beginning
+    if (startIndex >= allPosts.current.length) {
+      newPosts = allPosts.current.slice(0, postsPerPage);
+      setPage(1);
+    } else {
+      newPosts = allPosts.current.slice(startIndex, startIndex + postsPerPage);
+      setPage((prev) => prev + 1);
+    }
 
-    setVisiblePosts((prevPosts) => [
-      ...prevPosts,
-      ...shuffledPosts.slice(0, 50),
-    ]);
-
+    setVisiblePosts((prev) => [...prev, ...newPosts]);
     setLoading(false);
-  };
+  }, [page, loading]);
+
+  // Intersection Observer setup
+  useEffect(() => {
+    const observerTarget = loaderRef.current; // Store ref value
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && showInfiniteScroll) {
+          getMorePosts();
+        }
+      },
+      {
+        root: null,
+        rootMargin: "20px",
+        threshold: 0.1,
+      },
+    );
+
+    if (observerTarget) {
+      observer.observe(observerTarget);
+    }
+
+    return () => {
+      if (observerTarget) {
+        observer.unobserve(observerTarget);
+      }
+    };
+  }, [getMorePosts, showInfiniteScroll]);
 
   return (
-    <>
-      {showInfiniteScroll ? (
-        <InfiniteScroll
-          dataLength={visiblePosts.length}
-          next={fetchMorePosts}
-          hasMore={hasMore}
-          loader={<SkeletonLoader />}
-          endMessage={
-            <p className="my-10 flex items-center justify-center">
-              No more posts available
-            </p>
-          }
-        >
-          {visiblePosts.map((post) => (
-            <FeedPost
-              key={post._id}
-              post={{
-                ...post,
-                user: {
-                  name: post.user.name,
-                  username: `@${post.user.email.split("@")[0]}`,
-                  profilePhoto: post.user.profilePhoto,
-                  isVerified: post.user.isVerified,
-                  isFollowing: false,
-                  _id: post.user._id,
-                },
-                content: post.content,
-                images: post.images,
-                videos: post.videos,
-                timestamp: post.createdAt,
-                votes: post.votes,
-                comments: post.comments.length || post.commentCount || 0,
-                isPaid: post.isPaid,
-                category: post.category.name,
-              }}
-            />
-          ))}
-        </InfiniteScroll>
-      ) : (
-        <div>
-          {/* Display filtered posts if not using infinite scroll */}
-          {visiblePosts.map((post) => (
-            <FeedPost
-              key={post._id}
-              post={{
-                ...post,
-                user: {
-                  name: post.user.name,
-                  username: `@${post.user.email.split("@")[0]}`,
-                  profilePhoto: post.user.profilePhoto,
-                  isVerified: post.user.isVerified,
-                  role: post.user.role,
-                  isFollowing: false,
-                  _id: post.user._id,
-                },
-                content: post.content,
-                images: post.images,
-                videos: post.videos,
-                timestamp: post.createdAt,
-                votes: post.votes,
-                comments: post.comments.length || post.commentCount || 0,
-                isPaid: post.isPaid,
-                category: post.category.name,
-              }}
-            />
-          ))}
-        </div>
-      )}
-    </>
+    <div>
+      {visiblePosts.map((post) => (
+        <FeedPost
+          key={`${post._id}-${Math.random()}`} // Ensure unique key when posts repeat
+          post={{
+            ...post,
+            user: {
+              name: post.user.name,
+              username: `@${post.user.email.split("@")[0]}`,
+              profilePhoto: post.user.profilePhoto,
+              isVerified: post.user.isVerified,
+              role: post.user.role,
+              isFollowing: false,
+              _id: post.user._id,
+            },
+            content: post.content,
+            images: post.images,
+            videos: post.videos,
+            timestamp: post.createdAt,
+            votes: post.votes,
+            comments: post.comments.length || post.commentCount || 0,
+            isPaid: post.isPaid,
+            category: post.category.name,
+          }}
+        />
+      ))}
+
+      {/* Loader reference element */}
+      <div ref={loaderRef} className="h-10 w-full">
+        {loading && <SkeletonLoader />}
+      </div>
+    </div>
   );
 }
