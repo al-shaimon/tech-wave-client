@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -36,11 +37,11 @@ export default function RightSidebar() {
     try {
       const response = await axios.get(`${envConfig.baseApi}/auth/users`);
       if (response.data.success) {
-        // Filter out current user and get random 10 users
+        // Filter out current user and get random 8 users
         const filteredUsers = response.data.data.users
           .filter((user: User) => user._id !== currentUserId)
           .sort(() => 0.5 - Math.random())
-          .slice(0, 10);
+          .slice(0, 8);
 
         setUsers(filteredUsers);
 
