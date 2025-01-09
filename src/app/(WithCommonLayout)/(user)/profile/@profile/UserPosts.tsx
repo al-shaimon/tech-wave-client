@@ -11,6 +11,8 @@ import EditPostModal from "./EditPostModal";
 
 interface UserPostsProps {
   userId: string;
+  selectedFilter: string;
+  selectedSort: string;
 }
 
 interface Post {
@@ -37,41 +39,36 @@ interface UserData {
   posts: Post[];
 }
 
-export default function UserPosts({ userId }: UserPostsProps) {
+export default function UserPosts({
+  userId,
+  selectedFilter,
+  selectedSort,
+}: UserPostsProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [userInfo, setUserInfo] = useState<UserData | null>(null);
-  const [sortBy, setSortBy] = useState("latest");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [categories, setCategories] = useState<{ _id: string; name: string }[]>(
-    [],
-  );
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const postsPerPage = 10;
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const [userResponse, categoriesResponse] = await Promise.all([
-          axios.get(`${envConfig.baseApi}/auth/${userId}`, {
+        const userResponse = await axios.get(
+          `${envConfig.baseApi}/auth/${userId}`,
+          {
             headers: { Authorization: `${token}` },
-          }),
-          axios.get(`${envConfig.baseApi}/post-categories`),
-        ]);
+          },
+        );
 
         if (userResponse.data.success) {
           const userData = userResponse.data.data;
           setUserInfo(userData);
           setPosts(userData.posts);
-          setTotalPages(Math.ceil(userData.posts.length / postsPerPage));
-        }
-
-        if (categoriesResponse.data.success) {
-          setCategories(categoriesResponse.data.data);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -84,38 +81,40 @@ export default function UserPosts({ userId }: UserPostsProps) {
     fetchUserData();
   }, [userId]);
 
-  const filteredAndSortedPosts = posts
-    .filter((post) =>
-      selectedCategory ? post.category === selectedCategory : true,
-    )
-    .sort((a, b) => {
-      if (sortBy === "votes") {
-        return b.votes - a.votes;
-      } else {
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      }
-    });
+  // Apply filters and sorting whenever posts, selectedFilter, or selectedSort changes
+  useEffect(() => {
+    const filtered = posts
+      .filter((post) => {
+        if (selectedFilter === "all") return true;
+        if (selectedFilter === "premium") return post.isPaid;
+        if (selectedFilter === "free") return !post.isPaid;
+        return true;
+      })
+      .sort((a, b) => {
+        switch (selectedSort) {
+          case "oldest":
+            return (
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
+          case "most-upvoted":
+            return b.votes - a.votes;
+          case "most-commented":
+            return b.commentCount - a.commentCount;
+          default: // latest
+            return (
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+        }
+      });
+
+    setFilteredPosts(filtered);
+    setTotalPages(Math.ceil(filtered.length / postsPerPage));
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [posts, selectedFilter, selectedSort, postsPerPage]);
 
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = filteredAndSortedPosts.slice(
-    indexOfFirstPost,
-    indexOfLastPost,
-  );
-
-  const handleSortChange = (newSortBy: string) => {
-    setSortBy(newSortBy);
-    setCurrentPage(1);
-  };
-
-  const handleCategoryChange = (newCategory: string) => {
-    setSelectedCategory(newCategory);
-    setCurrentPage(1);
-  };
-
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
 
   const handleEditPost = (post: Post) => {
     setEditingPost(post);
@@ -135,7 +134,6 @@ export default function UserPosts({ userId }: UserPostsProps) {
       if (response.data.success) {
         toast.success("Post updated successfully");
         setEditingPost(null);
-        // Update the post in the local state
         setPosts(
           posts.map((post) =>
             post._id === updatedPost._id ? updatedPost : post,
@@ -161,7 +159,6 @@ export default function UserPosts({ userId }: UserPostsProps) {
 
         if (response.data.success) {
           toast.success("Post deleted successfully");
-          // Remove the deleted post from the local state
           setPosts(posts.filter((post) => post._id !== postId));
         }
       } catch (error) {
@@ -177,33 +174,6 @@ export default function UserPosts({ userId }: UserPostsProps) {
 
   return (
     <div className="m-1 md:m-3">
-      <div className="mb-4 flex items-center gap-x-3 md:flex-wrap">
-        <div className="mb-2 mt-2 w-full sm:mb-0 sm:w-auto md:mt-0">
-          <select
-            className="select select-bordered w-full max-w-xs"
-            value={sortBy}
-            onChange={(e) => handleSortChange(e.target.value)}
-          >
-            <option value="latest">Latest</option>
-            <option value="votes">Most Upvoted</option>
-          </select>
-        </div>
-        <div className="w-full sm:w-auto">
-          <select
-            className="select select-bordered w-full max-w-xs"
-            value={selectedCategory}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-          >
-            <option value="">All Categories</option>
-            {categories.map((category) => (
-              <option key={category._id} value={category._id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
       {currentPosts.length > 0 ? (
         currentPosts.map((post) => (
           <FeedPost
@@ -220,9 +190,7 @@ export default function UserPosts({ userId }: UserPostsProps) {
               },
               timestamp: post.createdAt,
               comments: post.commentCount,
-              category:
-                categories.find((c) => c._id === post.category)?.name ||
-                "Unknown",
+              category: post.category,
             }}
             onEdit={() => handleEditPost(post)}
             onDelete={() => handleDeletePost(post._id)}
@@ -244,14 +212,12 @@ export default function UserPosts({ userId }: UserPostsProps) {
       )}
 
       {totalPages > 1 && (
-        <div className="mt-4 flex justify-center">
+        <div className="mt-4 flex justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i}
-              onClick={() => paginate(i + 1)}
-              className={`mx-1 rounded px-3 py-1 ${
-                currentPage === i + 1 ? "bg-primary text-white" : "bg-gray-200"
-              }`}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`btn btn-sm ${currentPage === i + 1 ? "btn-primary" : "btn-ghost"}`}
             >
               {i + 1}
             </button>

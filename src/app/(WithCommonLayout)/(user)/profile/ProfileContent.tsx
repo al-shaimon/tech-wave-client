@@ -6,8 +6,6 @@ import Image from "next/image";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { toast } from "sonner";
-// import EditProfileModal from "./@profile/EditProfileModal";
-// import VerificationModal from "./@profile/VerificationModal";
 import envConfig from "@/config/envConfig";
 import { useRouter } from "next/navigation";
 import SkeletonLoader from "@/components/SkeletonLoader";
@@ -39,7 +37,15 @@ interface User {
   posts: any[];
 }
 
-export default function ProfileContent() {
+interface ProfileContentProps {
+  selectedFilter: string;
+  selectedSort: string;
+}
+
+export default function ProfileContent({
+  selectedFilter,
+  selectedSort,
+}: ProfileContentProps) {
   if (typeof window === "undefined") {
     return null;
   }
@@ -99,7 +105,7 @@ export default function ProfileContent() {
             phone: userData.phone,
             followersCount: userData.followersCount,
             followingCount: userData.followingCount,
-            posts: userData.posts, // Make sure this is included
+            posts: userData.posts,
           });
           setFollowersCount(userData.followersCount);
           setFollowingCount(userData.followingCount);
@@ -321,7 +327,11 @@ export default function ProfileContent() {
 
       {user && (
         <div className="mt-8 border-t border-[#26282a]">
-          <UserPosts userId={user.id} />
+          <UserPosts
+            userId={user.id}
+            selectedFilter={selectedFilter}
+            selectedSort={selectedSort}
+          />
         </div>
       )}
 

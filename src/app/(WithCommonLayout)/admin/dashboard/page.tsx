@@ -101,14 +101,14 @@ export default function AdminDashboard() {
     {
       title: "Total Users",
       value: stats.totalUsers,
-      icon: "/users.svg",
+      icon: "/manage-users.svg",
       link: "/admin/manage-users",
       color: "bg-blue-500",
     },
     {
       title: "Total Posts",
       value: stats.totalPosts,
-      icon: "/content.svg",
+      icon: "/posts.svg",
       link: "/admin/manage-content",
       color: "bg-green-500",
     },
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
     {
       title: "Premium Posts",
       value: stats.totalPremiumPosts,
-      icon: "/premium-post.svg",
+      icon: "/premium-posts.svg",
       link: "/admin/manage-content",
       color: "bg-yellow-500",
     },
